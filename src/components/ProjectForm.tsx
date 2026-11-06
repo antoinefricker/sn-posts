@@ -21,8 +21,16 @@ type ProjectFormProps = {
 
 /** Create/edit dialog. Closing is the caller's job after a successful onSubmit. */
 export function ProjectForm({ open, onOpenChange, initial, onSubmit }: ProjectFormProps) {
+  const [busy, setBusy] = useState(false)
+
+  // Esc, backdrop and the close button are swallowed while a save is running.
+  function handleOpenChange(next: boolean) {
+    if (busy) return
+    onOpenChange(next)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(next) => onOpenChange(next)}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{initial ? 'Edit project' : 'New project'}</DialogTitle>
@@ -33,7 +41,9 @@ export function ProjectForm({ open, onOpenChange, initial, onSubmit }: ProjectFo
             key={initial?.id ?? 'new'}
             initial={initial}
             onSubmit={onSubmit}
-            onCancel={() => onOpenChange(false)}
+            onCancel={() => handleOpenChange(false)}
+            busy={busy}
+            setBusy={setBusy}
           />
         )}
       </DialogContent>
@@ -45,14 +55,17 @@ function ProjectFormBody({
   initial,
   onSubmit,
   onCancel,
+  busy,
+  setBusy,
 }: {
   initial?: Project
   onSubmit: (title: string) => Promise<void>
   onCancel: () => void
+  busy: boolean
+  setBusy: (busy: boolean) => void
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
