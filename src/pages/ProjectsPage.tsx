@@ -3,7 +3,8 @@ import { Link } from 'react-router'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ProjectForm } from '@/components/ProjectForm'
-import { createProject, listProjects, updateProject } from '@/data/projects'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { createProject, deleteProject, listProjects, updateProject } from '@/data/projects'
 import { toMessage } from '@/data/errors'
 import type { Project } from '@/data/types'
 
@@ -17,10 +18,21 @@ function gamesLabel(count: number): string {
   return `${count} ${count === 1 ? 'game' : 'games'}`
 }
 
+function deleteDescription(count: number): string {
+  const games =
+    count === 0
+      ? 'It has no games.'
+      : count === 1
+        ? 'Its 1 game stays.'
+        : `Its ${count} games stay.`
+  return `Deletes only the project and its links. ${games}`
+}
+
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [deleting, setDeleting] = useState<Project | null>(null)
   const [editing, setEditing] = useState<Project | undefined>(undefined)
 
   const load = useCallback(async () => {
@@ -50,6 +62,13 @@ export function ProjectsPage() {
     if (editing) await updateProject(editing.id, title)
     else await createProject(title)
     setFormOpen(false)
+    await load()
+  }
+
+  async function handleDelete() {
+    if (!deleting) return
+    await deleteProject(deleting.id)
+    setDeleting(null)
     await load()
   }
 
@@ -92,6 +111,9 @@ export function ProjectsPage() {
                     <Button variant="outline" size="sm" onClick={() => openEdit(project)}>
                       Edit
                     </Button>
+                    <Button variant="outline" size="sm" onClick={() => setDeleting(project)}>
+                      Delete
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -104,6 +126,16 @@ export function ProjectsPage() {
         onOpenChange={setFormOpen}
         initial={editing}
         onSubmit={handleSubmit}
+      />
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleting(null)
+        }}
+        title={`Delete "${deleting?.title ?? ''}"?`}
+        description={deleteDescription(deleting?.game_count ?? 0)}
+        confirmLabel="Delete project"
+        onConfirm={handleDelete}
       />
     </div>
   )
