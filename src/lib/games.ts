@@ -16,13 +16,13 @@ export function formatScore(game: {
   return `${game.score_ours} - ${game.score_theirs}`
 }
 
-/** Confirmation text for deleting a game, stating how many projects lose it. */
+/** Confirmation text for deleting a game: the club-level effect, then how many projects use it. */
 export function deleteGameDescription(projectCount: number): string {
-  const where =
+  const usage =
     projectCount === 0
       ? 'It is not used in any project.'
       : projectCount === 1
-        ? 'Deletes the game from 1 project.'
-        : `Deletes the game from ${projectCount} projects.`
-  return `${where} This cannot be undone.`
+        ? 'It is used in 1 project and will be removed from it.'
+        : `It is used in ${projectCount} projects and will be removed from all of them.`
+  return `Deletes the game from the club for good. ${usage} This cannot be undone.`
 }

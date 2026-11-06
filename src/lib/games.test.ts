@@ -31,9 +31,15 @@ describe('normalizeGameCode', () => {
 })
 
 describe('deleteGameDescription', () => {
-  it('words 0, 1 and many projects', () => {
-    expect(deleteGameDescription(0)).toContain('It is not used in any project.')
-    expect(deleteGameDescription(1)).toContain('Deletes the game from 1 project.')
-    expect(deleteGameDescription(3)).toContain('Deletes the game from 3 projects.')
+  it('leads with the club-level effect and words 0, 1 and many projects', () => {
+    expect(deleteGameDescription(0)).toBe(
+      'Deletes the game from the club for good. It is not used in any project. This cannot be undone.',
+    )
+    expect(deleteGameDescription(1)).toBe(
+      'Deletes the game from the club for good. It is used in 1 project and will be removed from it. This cannot be undone.',
+    )
+    expect(deleteGameDescription(3)).toBe(
+      'Deletes the game from the club for good. It is used in 3 projects and will be removed from all of them. This cannot be undone.',
+    )
   })
 })
