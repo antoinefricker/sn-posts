@@ -4,8 +4,10 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ProjectForm } from '@/components/ProjectForm'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
+import { GameRow } from '@/components/GameRow'
+import { listProjectGames } from '@/data/games'
 import { deleteProject, getProject, updateProject } from '@/data/projects'
-import type { Project } from '@/data/types'
+import type { GameWithProjects, Project } from '@/data/types'
 import { deleteProjectDescription } from '@/lib/projects'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
@@ -42,9 +44,30 @@ function ProjectDetail({ projectId }: { projectId: string }) {
     }
   }, [projectId])
 
+  const [games, setGames] = useState<GameWithProjects[] | null>(null)
+  const [gamesError, setGamesError] = useState<string | null>(null)
+  const gamesRequestId = useRef(0)
+
+  const loadGames = useCallback(async () => {
+    const id = ++gamesRequestId.current
+    setGamesError(null)
+    try {
+      const list = await listProjectGames(projectId)
+      if (id === gamesRequestId.current) setGames(list)
+    } catch (e) {
+      if (id === gamesRequestId.current) setGamesError(toMessage(e))
+    }
+  }, [projectId])
+
   useEffect(() => {
     void loadProject()
-  }, [loadProject])
+    void loadGames()
+  }, [loadProject, loadGames])
+
+  /** Reload after any change; linking games also bumps the project's updated_at. */
+  const refresh = useCallback(async () => {
+    await Promise.all([loadProject(), loadGames()])
+  }, [loadProject, loadGames])
 
   if (state.status === 'loading') return <p className="text-muted-foreground">Loading…</p>
   if (state.status === 'error') {
@@ -74,7 +97,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
   async function handleEdit(title: string) {
     await updateProject(project.id, title)
     setEditOpen(false)
-    await loadProject()
+    await refresh()
   }
 
   async function handleDelete() {
@@ -105,12 +128,37 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           </Button>
         </div>
       </div>
+      <section className="grid gap-3" aria-labelledby="games-heading">
+        <h2 id="games-heading" className="text-lg font-semibold">
+          Games
+        </h2>
+        {gamesError ? (
+          <div role="alert" className="grid justify-items-start gap-2">
+            <p className="text-sm text-destructive">{gamesError}</p>
+            <Button variant="outline" onClick={() => void loadGames()}>
+              Retry
+            </Button>
+          </div>
+        ) : games === null ? (
+          <p className="text-muted-foreground">Loading games…</p>
+        ) : games.length === 0 ? (
+          <p className="text-muted-foreground">No games in this project yet.</p>
+        ) : (
+          <ul className="grid gap-3">
+            {games.map((game) => (
+              <li key={game.id}>
+                <GameRow game={game} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
       <ProjectForm open={editOpen} onOpenChange={setEditOpen} initial={project} onSubmit={handleEdit} />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title={`Delete "${project.title}"?`}
-        description={deleteProjectDescription(project.game_count)}
+        description={deleteProjectDescription(games?.length ?? project.game_count)}
         confirmLabel="Delete project"
         onConfirm={handleDelete}
       />
