@@ -39,8 +39,8 @@ export function AppLayout() {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
 
-  const nav = (
-    <nav className="flex flex-col gap-1">
+  const renderNav = (label: string) => (
+    <nav aria-label={label} className="flex flex-col gap-1">
       <NavItem to="/" end icon={<LayoutDashboard />} onNavigate={close}>Dashboard</NavItem>
       <Separator className="my-2" />
       <NavItem to="/projects" icon={<FolderKanban />} onNavigate={close}>Projects</NavItem>
@@ -74,10 +74,12 @@ export function AppLayout() {
           {open ? <X /> : <Menu />}
         </Button>
       </header>
-      {open && <div className="border-b bg-background p-3 md:hidden">{nav}</div>}
+      {open && (
+        <div className="border-b bg-background p-3 md:hidden">{renderNav('Mobile navigation')}</div>
+      )}
       <aside className="hidden w-60 shrink-0 border-r bg-background p-4 md:block">
         <div className="mb-4 px-3 font-semibold">sn-posts</div>
-        {nav}
+        {renderNav('Main navigation')}
       </aside>
       <main className="min-w-0 flex-1 p-4 py-8 md:px-8">
         <div className="mx-auto max-w-4xl">
