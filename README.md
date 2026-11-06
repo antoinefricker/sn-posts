@@ -20,18 +20,25 @@ npm run dev
 
 ## Authentication (Supabase)
 
-Users sign up with **name, club ID, email and password** and sign in with email and password. Auth is handled by Supabase Auth; name and club ID are stored in `public.profiles` (created by a database trigger at sign-up, readable and editable only by its owner via row-level security). Email confirmation is off. **Only one account can ever be created**: a `before insert` trigger on `auth.users` rejects any sign-up once a user exists (so the Auth API can't be used to bypass it), and the sign-up form is hidden in the UI. To reopen sign-up locally, run `npx supabase db reset`.
+Accounts have **name, club ID, email and password**; sign-in is email + password via Supabase Auth, and name / club ID / admin flag live in `public.profiles` (row-level security: users read and edit only their own profile, and can never change `is_admin`). Email confirmation is off.
 
-Schema lives in [`supabase/migrations`](supabase/migrations). To run it locally (requires Docker):
+**Roles**
+
+- The **first account** to sign up becomes an **admin**. Public sign-up is then closed (a `before insert` trigger on `auth.users` rejects it, so the Auth API can't be used to bypass it) and the sign-up form disappears.
+- **Admins** get a "Create a user account" form after signing in, optionally making the new user an admin too. It calls the [`create-user`](supabase/functions/create-user/index.ts) edge function, which verifies the caller is an admin and creates the user with the service-role key (never exposed to the browser).
+
+Schema lives in [`supabase/migrations`](supabase/migrations). To run everything locally (requires Docker):
 
 ```bash
-npx supabase start     # starts the local stack and applies migrations
+npx supabase start     # starts the local stack (incl. edge functions) and applies migrations
 npx supabase status    # shows the API URL and publishable key
 cp .env.example .env.local   # then fill in VITE_SUPABASE_ANON_KEY
 npm run dev
 ```
 
-`npx supabase db reset` rebuilds the local database from the migrations; `npx supabase stop` shuts the stack down.
+`npx supabase db reset` rebuilds the local database (and reopens sign-up for a new first admin); `npx supabase stop` shuts the stack down.
+
+On a cloud project, apply the schema and deploy the function: `npx supabase link`, `npx supabase db push`, `npx supabase functions deploy create-user`.
 
 ## Deploying to Vercel
 

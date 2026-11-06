@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     supabase
       .from('profiles')
-      .select('name, club_id')
+      .select('name, club_id, is_admin')
       .eq('id', userId)
       .single()
       .then(({ data }) => {

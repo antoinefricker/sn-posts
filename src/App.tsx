@@ -1,3 +1,4 @@
+import { AdminCreateUser } from './auth/AdminCreateUser'
 import { AuthForm } from './auth/AuthForm'
 import { useAuth } from './auth/AuthContext'
 import './App.css'
@@ -13,6 +14,8 @@ function App() {
       <h1>Welcome{profile ? `, ${profile.name}` : ''}</h1>
       <p>Email: {session.user.email}</p>
       {profile && <p>Club ID: {profile.club_id}</p>}
+      {profile?.is_admin && <p>Role: admin</p>}
+      {profile?.is_admin && <AdminCreateUser />}
       <button type="button" onClick={signOut}>
         Sign out
       </button>

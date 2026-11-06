@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { supabase } from '../supabase'
 import { useAuth } from './AuthContext'
 
-/** Only one account may ever exist; the database enforces it, this just hides the form. */
+/** Public sign-up is only open for the very first (admin) account; the database enforces it. */
 async function fetchSignupOpen(): Promise<boolean> {
   const { data, error } = await supabase.rpc('signup_open')
   return error ? true : data === true
@@ -37,7 +37,7 @@ export function AuthForm() {
     if (message && isSignUp && !(await fetchSignupOpen())) {
       setSignupOpen(false)
       setMode('signin')
-      setError('Sign-up is closed: an account already exists. Please sign in.')
+      setError('Sign-up is closed. Please sign in, or ask an admin to create your account.')
     } else {
       setError(message)
     }
