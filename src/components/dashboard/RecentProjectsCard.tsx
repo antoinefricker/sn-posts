@@ -62,6 +62,9 @@ export function RecentProjectsCard() {
             <Link to="/projects" className={buttonVariants({ variant: 'outline' })}>
               Create a project
             </Link>
+            <Link to="/projects" className="text-sm underline underline-offset-4">
+              View all projects
+            </Link>
           </div>
         ) : (
           <>
