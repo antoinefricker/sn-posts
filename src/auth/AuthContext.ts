@@ -10,7 +10,8 @@ export type Profile = {
 
 export type SignUpInput = {
   name: string
-  clubId: string
+  clubCode: string
+  clubName: string
   email: string
   password: string
 }
