@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(23);
 
 -- First user: goes through the public sign-up path (club_code / club_name user metadata).
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
@@ -62,6 +62,29 @@ select ok((select is_admin from public.profiles where id = '00000000-0000-0000-0
   'invite make_admin is honored');
 select is((select count(*)::int from public.user_invites where email = 'invited@b.test'), 0,
   'the invite is consumed');
+
+-- Expired invites (older than a minute) behave as no invite and are not consumed as a grant.
+insert into public.user_invites (email, club_id, make_admin, created_at)
+values ('late@b.test', '00000000-0000-0000-0000-0000000000c2', true, now() - interval '2 minutes');
+select throws_ok(
+  $$insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+      'late@b.test', '{"name": "Late"}', '{}')$$,
+  'P0001', 'Sign-up is closed: ask an admin to create your account', 'expired invite does not open sign-up');
+select is((select count(*)::int from public.user_invites where email = 'late@b.test'), 1,
+  'expired invite is left untouched');
+-- A live invite for the same email cannot coexist with another row (primary key) ...
+select throws_ok(
+  $$insert into public.user_invites (email, club_id) values ('late@b.test', '00000000-0000-0000-0000-0000000000c2')$$,
+  '23505', null, 'one invite per email');
+-- ... but once the stale row is cleared a fresh invite works.
+delete from public.user_invites where email = 'late@b.test' and created_at < now() - interval '1 minute';
+insert into public.user_invites (email, club_id) values ('late@b.test', '00000000-0000-0000-0000-0000000000c2');
+select lives_ok(
+  $$insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+      'late@b.test', '{"name": "Late"}', '{}')$$,
+  'a fresh invite works after clearing the expired one');
 
 -- Act as member m1.
 select set_config('request.jwt.claims', json_build_object('sub', :'m1', 'role', 'authenticated')::text, true);
