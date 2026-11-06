@@ -1,5 +1,5 @@
 begin;
-select plan(39);
+select plan(40);
 
 -- Club A: first user via the public sign-up path.
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
@@ -49,6 +49,10 @@ select throws_ok(
   $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
     values ('AB12', 'U13', 'Other', '2026-12-02', '10:00')$$,
   '23505', null, 'code unique per club, trimmed and case-insensitive');
+select throws_ok(
+  format($$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
+    values (%L, 'U13', 'Other', '2026-12-02', '10:00')$$, E'\tab12\n'),
+  '23505', null, 'code padded with tab/newline collides in the same club');
 select throws_ok(
   $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
     values ('  ', 'U13', 'Other', '2026-12-02', '10:00')$$,

@@ -32,7 +32,7 @@ create table public.games (
   )
 );
 
-create unique index games_club_code_key on public.games (club_id, lower(btrim(code)));
+create unique index games_club_code_key on public.games (club_id, lower(btrim(code, E' \t\r\n')));
 
 create table public.project_games (
   project_id uuid not null,
