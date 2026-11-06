@@ -18,6 +18,7 @@ npm run dev
 | Command                    | Runs                                        | Description                                                        |
 | -------------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
 | `make start`               | `npm run dev`                               | Start the dev server with HMR                                      |
+| `make stop`                | `pkill` on this project's Vite process      | Stop the dev server started by `make start`                        |
 | `make build`               | `npm run build`                             | Type-check and build to `dist/`                                    |
 | `make preview`             | `npm run preview`                           | Serve the production build locally                                 |
 | `make lint`                | `npm run lint`                              | Lint with Oxlint                                                   |

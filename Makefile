@@ -1,8 +1,12 @@
-.PHONY: start build preview lint supabase-start supabase-status supabase-stop db-reset link db-push deploy-function shadcn-add
+.PHONY: start stop build preview lint supabase-start supabase-status supabase-stop db-reset link db-push deploy-function shadcn-add
 
 # Start the dev server with HMR
 start:
 	npm run dev
+
+# Stop the dev server started by `make start` / `npm run dev`
+stop:
+	@pkill -f "$(CURDIR)/node_modules/.bin/vite" && echo "Dev server stopped" || echo "No dev server running"
 
 # Type-check and build to dist/
 build:
