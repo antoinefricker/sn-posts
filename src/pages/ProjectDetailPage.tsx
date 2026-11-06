@@ -162,6 +162,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
         open={addOpen}
         onOpenChange={setAddOpen}
         projectId={project.id}
+        projectGameIds={games?.map((g) => g.id) ?? []}
         onAdded={refresh}
       />
       <ProjectForm open={editOpen} onOpenChange={setEditOpen} initial={project} onSubmit={handleEdit} />
