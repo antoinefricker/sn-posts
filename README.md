@@ -42,4 +42,4 @@ vercel deploy           # preview deployment
 vercel deploy --prod    # production deployment
 ```
 
-Preview URL: _to be added after the first deploy_
+Latest deployment: https://sn-posts-ok1d2xyn3-antoinefricker.vercel.app (Vercel Deployment Protection is on, so it requires a Vercel login)
