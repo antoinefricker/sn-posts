@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import { AuthForm } from './auth/AuthForm'
 import { useAuth } from './auth/AuthContext'
 import { AdminRoute } from './layout/AdminRoute'
@@ -33,7 +33,7 @@ function App() {
         <Route element={<AdminRoute />}>
           <Route path="users/new" element={<CreateUserPage />} />
         </Route>
-        <Route path="*" element={<DashboardPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   )
