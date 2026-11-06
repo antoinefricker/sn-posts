@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatScore, isHomeGame, normalizeGameCode } from './games'
+import { deleteGameDescription, formatScore, isHomeGame, normalizeGameCode } from './games'
 
 describe('formatScore', () => {
   it('formats a score', () => {
@@ -27,5 +27,13 @@ describe('isHomeGame', () => {
 describe('normalizeGameCode', () => {
   it('trims', () => {
     expect(normalizeGameCode('  AB12 ')).toBe('AB12')
+  })
+})
+
+describe('deleteGameDescription', () => {
+  it('words 0, 1 and many projects', () => {
+    expect(deleteGameDescription(0)).toContain('It is not used in any project.')
+    expect(deleteGameDescription(1)).toContain('Deletes the game from 1 project.')
+    expect(deleteGameDescription(3)).toContain('Deletes the game from 3 projects.')
   })
 })
