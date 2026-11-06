@@ -1,5 +1,6 @@
 import { useAuth } from '@/auth/AuthContext'
 import { RecentProjectsCard } from '@/components/dashboard/RecentProjectsCard'
+import { UpcomingGamesCard } from '@/components/dashboard/UpcomingGamesCard'
 
 export function DashboardPage() {
   const { session, profile } = useAuth()
@@ -16,6 +17,7 @@ export function DashboardPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <RecentProjectsCard />
+        <UpcomingGamesCard />
       </div>
     </div>
   )
