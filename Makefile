@@ -1,15 +1,31 @@
-.PHONY: start status stop db-reset link db-push deploy-function shadcn-add
+.PHONY: start build preview lint supabase-start supabase-status supabase-stop db-reset link db-push deploy-function shadcn-add
+
+# Start the dev server with HMR
+start:
+	npm run dev
+
+# Type-check and build to dist/
+build:
+	npm run build
+
+# Serve the production build locally
+preview:
+	npm run preview
+
+# Lint with Oxlint
+lint:
+	npm run lint
 
 # Start the local Supabase stack (incl. edge functions) and apply migrations
-start:
+supabase-start:
 	npx supabase start
 
 # Show the local API URL and publishable key
-status:
+supabase-status:
 	npx supabase status
 
 # Shut down the local Supabase stack (database, auth, edge functions)
-stop:
+supabase-stop:
 	npx supabase stop
 
 # Rebuild the local database (reopens sign-up for a new first admin)

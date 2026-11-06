@@ -13,36 +13,31 @@ npm run dev
 
 ### Available commands
 
-**npm scripts**
-
-| Command           | Description                         |
-| ----------------- | ----------------------------------- |
-| `npm run dev`     | Start the dev server with HMR       |
-| `npm run build`   | Type-check and build to `dist/`     |
-| `npm run preview` | Serve the production build locally  |
-| `npm run lint`    | Lint with Oxlint                    |
-
 **make** (wraps the Supabase and shadcn/ui `npx` commands; Supabase local stack requires Docker)
 
-| Command                    | Runs                                         | Description                                                        |
-| -------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
-| `make start`               | `npx supabase start`                         | Start the local stack (incl. edge functions) and apply migrations  |
-| `make status`              | `npx supabase status`                        | Show the local API URL and publishable key                         |
-| `make stop`                | `npx supabase stop`                          | Shut the local stack down                                          |
-| `make db-reset`            | `npx supabase db reset`                      | Rebuild the local database (reopens sign-up for a new first admin) |
-| `make link`                | `npx supabase link`                          | Link this folder to a cloud Supabase project                       |
-| `make db-push`             | `npx supabase db push`                       | Apply migrations to the linked cloud project                       |
-| `make deploy-function`     | `npx supabase functions deploy create-user`  | Deploy the `create-user` edge function                             |
-| `make shadcn-add c=<name>` | `npx shadcn@latest add <name>`               | Add a shadcn/ui component                                          |
+| Command                    | Runs                                        | Description                                                        |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| `make start`               | `npm run dev`                               | Start the dev server with HMR                                      |
+| `make build`               | `npm run build`                             | Type-check and build to `dist/`                                    |
+| `make preview`             | `npm run preview`                           | Serve the production build locally                                 |
+| `make lint`                | `npm run lint`                              | Lint with Oxlint                                                   |
+| `make supabase-start`      | `npx supabase start`                        | Start the local stack (incl. edge functions) and apply migrations  |
+| `make supabase-status`     | `npx supabase status`                       | Show the local API URL and publishable key                         |
+| `make supabase-stop`       | `npx supabase stop`                         | Shut the local stack down                                          |
+| `make db-reset`            | `npx supabase db reset`                     | Rebuild the local database (reopens sign-up for a new first admin) |
+| `make link`                | `npx supabase link`                         | Link this folder to a cloud Supabase project                       |
+| `make db-push`             | `npx supabase db push`                      | Apply migrations to the linked cloud project                       |
+| `make deploy-function`     | `npx supabase functions deploy create-user` | Deploy the `create-user` edge function                             |
+| `make shadcn-add c=<name>` | `npx shadcn@latest add <name>`              | Add a shadcn/ui component                                          |
 
 **Vercel CLI**
 
-| Command                | Description                                  |
-| ---------------------- | -------------------------------------------- |
-| `vercel login`         | Sign in to Vercel (one-time)                 |
-| `vercel link`          | Link this folder to the Vercel project       |
-| `vercel deploy`        | Create a preview deployment                  |
-| `vercel deploy --prod` | Create a production deployment               |
+| Command                | Description                            |
+| ---------------------- | -------------------------------------- |
+| `vercel login`         | Sign in to Vercel (one-time)           |
+| `vercel link`          | Link this folder to the Vercel project |
+| `vercel deploy`        | Create a preview deployment            |
+| `vercel deploy --prod` | Create a production deployment         |
 
 ## UI
 
@@ -61,13 +56,13 @@ Accounts have **name, club ID, email and password**; sign-in is email + password
 Schema lives in [`supabase/migrations`](supabase/migrations). To run everything locally (requires Docker):
 
 ```bash
-make start     # starts the local stack (incl. edge functions) and applies migrations
-make status    # shows the API URL and publishable key
+make supabase-start     # starts the local stack (incl. edge functions) and applies migrations
+make supabase-status    # shows the API URL and publishable key
 cp .env.example .env.local   # then fill in VITE_SUPABASE_ANON_KEY
 npm run dev
 ```
 
-`make db-reset` rebuilds the local database (and reopens sign-up for a new first admin); `make stop` shuts the stack down.
+`make db-reset` rebuilds the local database (and reopens sign-up for a new first admin); `make supabase-stop` shuts the stack down.
 
 On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`.
 
