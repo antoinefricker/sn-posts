@@ -25,6 +25,7 @@ Accounts have **name, club ID, email and password**; sign-in is email + password
 **Roles**
 
 - The **first account** to sign up becomes an **admin**. Public sign-up is then closed (a `before insert` trigger on `auth.users` rejects it, so the Auth API can't be used to bypass it) and the sign-up form disappears.
+- **Every user** can edit their own name, club ID, email and password from the "Your information" form (RLS allows updates to their own row only, and never to `is_admin`). If the project requires email-change confirmation, the new address takes effect after the user confirms it.
 - **Admins** get a "Create a user account" form after signing in, optionally making the new user an admin too. It calls the [`create-user`](supabase/functions/create-user/index.ts) edge function, which verifies the caller is an admin and creates the user with the service-role key (never exposed to the browser).
 
 Schema lives in [`supabase/migrations`](supabase/migrations). To run everything locally (requires Docker):

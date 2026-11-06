@@ -58,6 +58,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async signOut() {
       await supabase.auth.signOut()
     },
+    async updateProfile({ name, clubId }: { name: string; clubId: string }) {
+      if (!userId) return 'Not signed in'
+      // RLS + column grants: users can only update their own name and club_id.
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ name, club_id: clubId })
+        .eq('id', userId)
+        .select('name, club_id, is_admin')
+        .single()
+      if (error) return error.message
+      setProfile(data)
+      return null
+    },
+    async updateAccount({ email, password }: { email?: string; password?: string }) {
+      const { data, error } = await supabase.auth.updateUser({
+        ...(email ? { email } : {}),
+        ...(password ? { password } : {}),
+      })
+      if (error) return { error: error.message, pendingEmail: null }
+      return { error: null, pendingEmail: data.user.new_email ?? null }
+    },
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

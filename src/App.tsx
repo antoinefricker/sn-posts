@@ -1,5 +1,6 @@
 import { AdminCreateUser } from './auth/AdminCreateUser'
 import { AuthForm } from './auth/AuthForm'
+import { EditProfile } from './auth/EditProfile'
 import { useAuth } from './auth/AuthContext'
 import './App.css'
 
@@ -15,6 +16,7 @@ function App() {
       <p>Email: {session.user.email}</p>
       {profile && <p>Club ID: {profile.club_id}</p>}
       {profile?.is_admin && <p>Role: admin</p>}
+      <EditProfile />
       {profile?.is_admin && <AdminCreateUser />}
       <button type="button" onClick={signOut}>
         Sign out
