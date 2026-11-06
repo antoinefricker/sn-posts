@@ -26,7 +26,6 @@ export function EditProfile() {
     const formEl = e.currentTarget
     const form = new FormData(formEl)
     const name = String(form.get('name') ?? '').trim()
-    const clubId = String(form.get('clubId') ?? '').trim()
     const email = String(form.get('email') ?? '').trim()
     const password = String(form.get('password') ?? '')
 
@@ -34,8 +33,8 @@ export function EditProfile() {
     setMessage(null)
 
     const notes: string[] = []
-    if (name !== profile!.name || clubId !== profile!.club_id) {
-      const err = await updateProfile({ name, clubId })
+    if (name !== profile!.name) {
+      const err = await updateProfile({ name })
       if (err) return finish({ ok: false, text: err })
       notes.push('Profile updated')
     }
@@ -67,15 +66,21 @@ export function EditProfile() {
 
   return (
     // Re-key on saved values so the inputs reset to what is stored.
-    <Card key={`${profile.name}|${profile.club_id}|${currentEmail}`}>
+    <Card key={`${profile.name}|${currentEmail}`}>
       <form onSubmit={onSubmit} className="grid gap-4">
         <CardHeader>
           <CardTitle>Your information</CardTitle>
-          <CardDescription>Update your name, club, email or password.</CardDescription>
+          <CardDescription>Update your name, email or password.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <FormField label="Name" name="name" defaultValue={profile.name} required />
-          <FormField label="Club ID" name="clubId" defaultValue={profile.club_id} required />
+          <FormField
+            label="Club"
+            name="club"
+            value={`${profile.club.name} (${profile.club.code})`}
+            readOnly
+            disabled
+          />
           <FormField
             label="Email"
             name="email"

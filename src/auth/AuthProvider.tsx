@@ -58,12 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async signOut() {
       await supabase.auth.signOut()
     },
-    async updateProfile({ name, clubId }: { name: string; clubId: string }) {
+    async updateProfile({ name }: { name: string }) {
       if (!userId) return 'Not signed in'
-      // RLS + column grants: users can only update their own name and club_id.
+      // RLS + column grants: users can only update their own name.
       const { data, error } = await supabase
         .from('profiles')
-        .update({ name, club_id: clubId })
+        .update({ name })
         .eq('id', userId)
         .select('name, is_admin, club_id, club:clubs(code, name)')
         .single<Profile>()

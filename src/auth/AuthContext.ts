@@ -24,8 +24,8 @@ export type AuthValue = {
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (input: SignUpInput) => Promise<string | null>
   signOut: () => Promise<void>
-  /** Edit the signed-in user's own name and club ID. */
-  updateProfile: (input: { name: string; clubId: string }) => Promise<string | null>
+  /** Edit the signed-in user's own name. The club cannot be changed. */
+  updateProfile: (input: { name: string }) => Promise<string | null>
   /**
    * Change the signed-in user's email and/or password. `pendingEmail` is set when the
    * project requires confirming the new address before it takes effect.
