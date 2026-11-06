@@ -1,58 +1,53 @@
-import { useState } from "react";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { GameForm } from "@/components/GameForm";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { deleteGame, removeGameFromProject, updateGame } from "@/data/games";
-import type { GameInput, GameWithProjects } from "@/data/types";
-import { deleteGameDescription } from "@/lib/games";
+import { useState } from 'react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { GameForm } from '@/components/GameForm'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { deleteGame, removeGameFromProject, updateGame } from '@/data/games'
+import type { GameInput, GameWithProjects } from '@/data/types'
+import { deleteGameDescription } from '@/lib/games'
 
 type GameActionsProps = {
-  game: GameWithProjects;
+  game: GameWithProjects
   /** When set, the row offers "Remove from project" for this project. */
-  projectId?: string;
-  /** Reload the project's data; called after every successful change and expected not to throw. */
-  onChanged: () => Promise<void> | void;
-};
+  projectId?: string
+  /** Refreshes the caller's list; called after every successful change and expected not to throw. */
+  onChanged: () => Promise<void> | void
+}
 
 /**
  * Edit, delete and (on a project page) remove-from-project for one game row. The game is a prop of
  * the row, so the dialogs keep their content while they animate closed.
  */
 export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
-  const [editOpen, setEditOpen] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [editOpen, setEditOpen] = useState(false)
+  const [removeOpen, setRemoveOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   // Esc, backdrop and the close button are swallowed while a save is running.
   function handleEditOpenChange(next: boolean) {
-    if (saving) return;
-    setEditOpen(next);
+    if (saving) return
+    setEditOpen(next)
   }
 
   async function handleEdit(input: GameInput) {
-    await updateGame(game.id, input);
-    setEditOpen(false);
-    await onChanged();
+    await updateGame(game.id, input)
+    setEditOpen(false)
+    await onChanged()
   }
 
   async function handleRemove() {
-    if (!projectId) return;
-    await removeGameFromProject(projectId, game.id);
-    setRemoveOpen(false);
-    await onChanged();
+    if (!projectId) return
+    await removeGameFromProject(projectId, game.id)
+    setRemoveOpen(false)
+    await onChanged()
   }
 
   async function handleDelete() {
-    await deleteGame(game.id);
-    setDeleteOpen(false);
-    await onChanged();
+    await deleteGame(game.id)
+    setDeleteOpen(false)
+    await onChanged()
   }
 
   return (
@@ -104,5 +99,5 @@ export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
         onConfirm={handleDelete}
       />
     </>
-  );
+  )
 }
