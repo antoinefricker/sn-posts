@@ -17,7 +17,7 @@ function deleteGameDescription(projectCount: number): string {
   const where =
     projectCount === 1
       ? 'It is used in 1 project and will be removed from it.'
-      : `It is used in ${projectCount} projects and will be removed from all ${projectCount} of them.`
+      : `It is used in ${projectCount} projects and will be removed from all of them.`
   return `Deletes the game from the club for good. ${where}`
 }
 
