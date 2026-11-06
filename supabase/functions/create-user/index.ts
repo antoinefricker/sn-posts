@@ -58,15 +58,26 @@ Deno.serve(async (req) => {
     return json({ error: 'name, email and a password of 6+ characters are required' }, 400)
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { name },
-    // The new user always joins the caller's club; any club in the request body is ignored.
-    app_metadata: { created_by_admin: true, make_admin: makeAdmin, club_id: profile.club_id },
-  })
-  if (error) return json({ error: error.message }, 400)
+  // GoTrue does not pass admin-supplied app_metadata to the database triggers, and user metadata
+  // is client-controlled. So the caller's club and the admin flag travel in a short-lived invite
+  // row (service role only) that the sign-up triggers check and consume.
+  const inviteEmail = email.toLowerCase()
+  const { error: inviteError } = await admin
+    .from('user_invites')
+    .upsert({ email: inviteEmail, club_id: profile.club_id, make_admin: makeAdmin })
+  if (inviteError) return json({ error: inviteError.message }, 500)
 
-  return json({ id: data.user.id, email: data.user.email, isAdmin: makeAdmin }, 201)
+  try {
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name },
+    })
+    if (error) return json({ error: error.message }, 400)
+    return json({ id: data.user.id, email: data.user.email, isAdmin: makeAdmin }, 201)
+  } finally {
+    // Consumed on success; this clears it when creation failed (e.g. email already taken).
+    await admin.from('user_invites').delete().eq('email', inviteEmail)
+  }
 })
