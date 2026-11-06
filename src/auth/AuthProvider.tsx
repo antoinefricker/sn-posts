@@ -5,13 +5,17 @@ import { AuthContext, type Profile, type SignUpInput } from './AuthContext'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
+  // The profile belongs to one user; `profileState.userId` records whose fetch has settled.
+  const [profileState, setProfileState] = useState<{
+    userId: string
+    profile: Profile | null
+  } | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
-      setLoading(false)
+      setSessionReady(true)
     })
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next)
@@ -21,23 +25,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = session?.user.id
   useEffect(() => {
-    if (!userId) {
-      setProfile(null)
-      return
-    }
+    if (!userId) return
     let cancelled = false
+    const settle = (profile: Profile | null) => {
+      if (!cancelled) setProfileState({ userId, profile })
+    }
     supabase
       .from('profiles')
       .select('name, is_admin, club_id, club:clubs(code, name)')
       .eq('id', userId)
       .single<Profile>()
-      .then(({ data }) => {
-        if (!cancelled) setProfile(data)
-      })
+      .then(
+        ({ data, error }) => {
+          if (error) console.error('Could not load profile', error)
+          settle(error ? null : data)
+        },
+        (error: unknown) => {
+          console.error('Could not load profile', error)
+          settle(null)
+        },
+      )
     return () => {
       cancelled = true
     }
   }, [userId])
+
+  // Loading until the session is known and, when signed in, until that user's profile
+  // fetch has settled; a profile fetched for another user is never exposed.
+  const profileSettled = !!userId && profileState?.userId === userId
+  const profile = profileSettled ? profileState.profile : null
+  const loading = !sessionReady || (!!userId && !profileSettled)
 
   const value = {
     session,
@@ -68,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select('name, is_admin, club_id, club:clubs(code, name)')
         .single<Profile>()
       if (error) return error.message
-      setProfile(data)
+      setProfileState({ userId, profile: data })
       return null
     },
     async updateAccount({ email, password }: { email?: string; password?: string }) {
