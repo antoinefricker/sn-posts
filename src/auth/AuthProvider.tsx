@@ -28,9 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     supabase
       .from('profiles')
-      .select('name, club_id, is_admin')
+      .select('name, is_admin, club_id, club:clubs(code, name)')
       .eq('id', userId)
-      .single()
+      .single<Profile>()
       .then(({ data }) => {
         if (!cancelled) setProfile(data)
       })
@@ -65,8 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .update({ name, club_id: clubId })
         .eq('id', userId)
-        .select('name, club_id, is_admin')
-        .single()
+        .select('name, is_admin, club_id, club:clubs(code, name)')
+        .single<Profile>()
       if (error) return error.message
       setProfile(data)
       return null

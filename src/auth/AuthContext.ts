@@ -1,7 +1,12 @@
 import { createContext, useContext } from 'react'
 import type { Session } from '@supabase/supabase-js'
 
-export type Profile = { name: string; club_id: string; is_admin: boolean }
+export type Profile = {
+  name: string
+  is_admin: boolean
+  club_id: string
+  club: { code: string; name: string }
+}
 
 export type SignUpInput = {
   name: string
