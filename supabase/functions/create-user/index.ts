@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   // Only admins may create accounts.
   const { data: profile } = await admin
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, club_id')
     .eq('id', caller.user.id)
     .single()
   if (!profile?.is_admin) return json({ error: 'Admins only' }, 403)
@@ -51,20 +51,20 @@ Deno.serve(async (req) => {
     return json({ error: 'Invalid JSON' }, 400)
   }
   const name = String(body.name ?? '').trim()
-  const clubId = String(body.clubId ?? '').trim()
   const email = String(body.email ?? '').trim()
   const password = String(body.password ?? '')
   const makeAdmin = body.isAdmin === true
-  if (!name || !clubId || !email || password.length < 6) {
-    return json({ error: 'name, clubId, email and a password of 6+ characters are required' }, 400)
+  if (!name || !email || password.length < 6) {
+    return json({ error: 'name, email and a password of 6+ characters are required' }, 400)
   }
 
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { name, club_id: clubId },
-    app_metadata: { created_by_admin: true, make_admin: makeAdmin },
+    user_metadata: { name },
+    // The new user always joins the caller's club; any club in the request body is ignored.
+    app_metadata: { created_by_admin: true, make_admin: makeAdmin, club_id: profile.club_id },
   })
   if (error) return json({ error: error.message }, 400)
 
