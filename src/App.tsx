@@ -40,7 +40,7 @@ function App() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {session.user.email}
-            {profile && ` · Club ${profile.club_id}`}
+            {profile && ` · Club ${profile.club.name}`}
           </p>
         </div>
         <EditProfile />
