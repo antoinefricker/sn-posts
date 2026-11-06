@@ -1,0 +1,141 @@
+begin;
+select plan(36);
+
+-- Club A: first user via the public sign-up path.
+insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
+values (
+  '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated', 'admin@a.test',
+  '{"name": "Admin A", "club_code": "club-a", "club_name": "Club A"}', '{}'
+);
+insert into public.clubs (id, code, name) values ('00000000-0000-0000-0000-0000000000c2', 'club-b', 'Club B');
+
+create function pg_temp.create_test_user(p_email text, p_club uuid, p_admin boolean)
+returns uuid language plpgsql as $$
+declare v_id uuid := gen_random_uuid();
+begin
+  insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
+  values (v_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', p_email,
+    jsonb_build_object('name', p_email),
+    jsonb_build_object('created_by_admin', true, 'club_id', p_club, 'make_admin', p_admin));
+  return v_id;
+end $$;
+
+select pg_temp.create_test_user('m1@a.test', (select id from public.clubs where code = 'club-a'), false) as m1 \gset
+select pg_temp.create_test_user('m2@b.test', '00000000-0000-0000-0000-0000000000c2', false) as m2 \gset
+select id as club_a from public.clubs where code = 'club-a' \gset
+
+-- Act as m1 (club A).
+select set_config('request.jwt.claims', json_build_object('sub', :'m1', 'role', 'authenticated')::text, true);
+set local role authenticated;
+
+select lives_ok(
+  $$insert into public.projects (id, title) values ('11111111-1111-1111-1111-111111111111', 'Season 1')$$,
+  'member can create a project');
+select is((select club_id from public.projects), :'club_a'::uuid, 'project club_id defaults to the member club');
+select is((select created_by from public.projects), :'m1'::uuid, 'project created_by defaults to the member');
+select is((select count(*)::int from public.project_games), 0, 'a project with no games is valid');
+select throws_ok($$insert into public.projects (title) values ('   ')$$, '23514', null, 'blank project title rejected');
+select throws_ok(
+  $$insert into public.projects (title, created_by) values ('X', '00000000-0000-0000-0000-0000000000a1')$$,
+  '42501', null, 'cannot create a project as someone else');
+
+-- Games
+select lives_ok(
+  $$insert into public.games (id, code, team_name, opponent_name, game_date, kickoff_time)
+    values ('22222222-2222-2222-2222-222222222222', ' ab12 ', 'U13', 'Rivals', '2026-12-01', '10:00')$$,
+  'member can create a game');
+select throws_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
+    values ('AB12', 'U13', 'Other', '2026-12-02', '10:00')$$,
+  '23505', null, 'code unique per club, trimmed and case-insensitive');
+select throws_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
+    values ('  ', 'U13', 'Other', '2026-12-02', '10:00')$$,
+  '23514', null, 'blank game code rejected');
+select lives_ok(
+  $$insert into public.games (id, code, team_name, opponent_name, game_date, kickoff_time, score_ours, score_theirs)
+    values ('33333333-3333-3333-3333-333333333333', 'ZZ1', 'U13', 'Other', '2026-12-02', '10:00', 0, 0)$$,
+  'scores (0,0) accepted');
+select throws_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time, score_ours, score_theirs)
+    values ('ZZ2', 'U13', 'Other', '2026-12-02', '10:00', 1, null)$$,
+  '23514', null, 'scores (1,null) rejected');
+select throws_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time, score_ours, score_theirs)
+    values ('ZZ3', 'U13', 'Other', '2026-12-02', '10:00', -1, 0)$$,
+  '23514', null, 'scores (-1,0) rejected');
+
+-- Links and updated_at
+select set_config('t.u0', (select updated_at::text from public.projects), true);
+select pg_sleep(0.01);
+select lives_ok(
+  $$insert into public.project_games (project_id, game_id) values
+    ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222')$$,
+  'member can link a game to a project');
+select ok((select updated_at > current_setting('t.u0')::timestamptz from public.projects),
+  'linking advances project updated_at');
+select throws_ok(
+  $$insert into public.project_games (project_id, game_id) values
+    ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222')$$,
+  '23505', null, 'same pair cannot be linked twice');
+
+select set_config('t.u1', (select updated_at::text from public.projects), true);
+select pg_sleep(0.01);
+select lives_ok($$update public.games set opponent_name = 'Rivals 2' where code = ' ab12 '$$, 'member can edit a game');
+select ok((select updated_at > current_setting('t.u1')::timestamptz from public.projects),
+  'editing a game advances linked project updated_at');
+
+select set_config('t.u2', (select updated_at::text from public.projects), true);
+select pg_sleep(0.01);
+select lives_ok($$delete from public.project_games$$, 'member can unlink');
+select ok((select updated_at > current_setting('t.u2')::timestamptz from public.projects),
+  'unlinking advances project updated_at');
+
+-- Protected columns
+select throws_ok($$update public.projects set created_by = '00000000-0000-0000-0000-0000000000a1'$$,
+  '42501', null, 'member cannot change project created_by');
+select throws_ok($$update public.projects set club_id = '00000000-0000-0000-0000-0000000000c2'$$,
+  '42501', null, 'member cannot change project club_id');
+select throws_ok($$update public.games set club_id = '00000000-0000-0000-0000-0000000000c2'$$,
+  '42501', null, 'member cannot change game club_id');
+
+-- Club B user
+select set_config('request.jwt.claims', json_build_object('sub', :'m2', 'role', 'authenticated')::text, true);
+
+select is((select count(*)::int from public.projects) + (select count(*)::int from public.games), 0,
+  'club B sees none of club A projects/games');
+select throws_ok(
+  format($$insert into public.projects (club_id, title) values (%L, 'x')$$, :'club_a'),
+  '42501', null, 'club B cannot insert a project into club A');
+select lives_ok($$update public.projects set title = 'hacked'$$, 'club B update of club A projects is a no-op');
+select lives_ok($$delete from public.games where code <> 'AB12'$$, 'club B delete of club A games is a no-op');
+
+-- Cross-club link: club B creates a game, club A project cannot be linked to it.
+select lives_ok(
+  $$insert into public.games (id, code, team_name, opponent_name, game_date, kickoff_time)
+    values ('44444444-4444-4444-4444-444444444444', 'AB12', 'B1', 'Foes', '2026-12-03', '11:00')$$,
+  'same code allowed in a different club');
+
+select set_config('request.jwt.claims', json_build_object('sub', :'m1', 'role', 'authenticated')::text, true);
+select is((select title from public.projects), 'Season 1', 'club A project unchanged by club B');
+select is((select count(*)::int from public.games), 2, 'club A games still present after club B delete');
+select throws_ok(
+  $$insert into public.project_games (project_id, game_id) values
+    ('11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444')$$,
+  '23503', null, 'a link cannot pair a club A project with a club B game');
+
+-- Cascades
+select lives_ok(
+  $$insert into public.project_games (project_id, game_id) values
+    ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222'),
+    ('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333')$$,
+  'relink two games');
+select lives_ok($$delete from public.games where id = '33333333-3333-3333-3333-333333333333'$$, 'delete a game');
+select is((select count(*)::int from public.project_games), 1, 'deleting a game removes its links');
+select lives_ok($$delete from public.projects$$, 'delete a project');
+select is((select count(*)::int from public.project_games), 0, 'deleting a project removes its links');
+select is((select count(*)::int from public.games), 1, 'deleting a project keeps its games');
+
+select * from finish();
+rollback;
