@@ -1,5 +1,5 @@
 begin;
-select plan(36);
+select plan(39);
 
 -- Club A: first user via the public sign-up path.
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
@@ -53,6 +53,18 @@ select throws_ok(
   $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
     values ('  ', 'U13', 'Other', '2026-12-02', '10:00')$$,
   '23514', null, 'blank game code rejected');
+select throws_ok(
+  $$insert into public.games (code, opponent_name, game_date, kickoff_time)
+    values ('NT1', 'Other', '2026-12-02', '10:00')$$,
+  '23502', null, 'missing team_name rejected');
+select throws_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
+    values ('NT2', '  ', 'Other', '2026-12-02', '10:00')$$,
+  '23514', null, 'blank team_name rejected');
+select throws_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
+    values ('NT3', 'U13', '  ', '2026-12-02', '10:00')$$,
+  '23514', null, 'blank opponent_name rejected');
 select lives_ok(
   $$insert into public.games (id, code, team_name, opponent_name, game_date, kickoff_time, score_ours, score_theirs)
     values ('33333333-3333-3333-3333-333333333333', 'ZZ1', 'U13', 'Other', '2026-12-02', '10:00', 0, 0)$$,
