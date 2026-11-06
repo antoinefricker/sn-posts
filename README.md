@@ -22,6 +22,7 @@ npm run dev
 | `make build`               | `npm run build`                             | Type-check and build to `dist/`                                    |
 | `make preview`             | `npm run preview`                           | Serve the production build locally                                 |
 | `make lint`                | `npm run lint`                              | Lint with Oxlint                                                   |
+| `make test`                | `npm test`                                  | Run the Vitest unit tests                                          |
 | `make supabase-start`      | `npx supabase start`                        | Start the local stack (incl. edge functions) and apply migrations  |
 | `make supabase-status`     | `npx supabase status`                       | Show the local API URL and publishable key                         |
 | `make supabase-stop`       | `npx supabase stop`                         | Shut the local stack down                                          |

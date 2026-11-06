@@ -1,4 +1,4 @@
-.PHONY: start stop build preview lint supabase-start supabase-status supabase-stop db-reset db-test link db-push deploy-function shadcn-add
+.PHONY: start stop build preview lint test supabase-start supabase-status supabase-stop db-reset db-test link db-push deploy-function shadcn-add
 
 # Start the dev server with HMR
 start:
@@ -15,6 +15,10 @@ build:
 # Serve the production build locally
 preview:
 	npm run preview
+
+# Run the Vitest unit tests
+test:
+	npm run test
 
 # Lint with Oxlint
 lint:
