@@ -51,7 +51,6 @@ create index project_games_game_id_idx on public.project_games (game_id);
 create function public.set_updated_at()
 returns trigger
 language plpgsql
-security definer
 set search_path = ''
 as $$
 begin
@@ -79,8 +78,8 @@ begin
 end;
 $$;
 
-revoke all on function public.set_updated_at() from public;
-revoke all on function public.touch_projects_of_game() from public;
+revoke all on function public.set_updated_at() from public, anon, authenticated;
+revoke all on function public.touch_projects_of_game() from public, anon, authenticated;
 
 create trigger projects_set_updated_at before update on public.projects
   for each row execute function public.set_updated_at();

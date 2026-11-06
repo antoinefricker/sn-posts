@@ -1,5 +1,5 @@
 begin;
-select plan(40);
+select plan(43);
 
 -- Club A: first user via the public sign-up path.
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
@@ -152,6 +152,13 @@ select is((select count(*)::int from public.project_games), 1, 'deleting a game 
 select lives_ok($$delete from public.projects$$, 'delete a project');
 select is((select count(*)::int from public.project_games), 0, 'deleting a project removes its links');
 select is((select count(*)::int from public.games), 1, 'deleting a project keeps its games');
+
+select ok(not has_function_privilege('authenticated', 'public.set_updated_at()', 'execute'),
+  'authenticated cannot execute set_updated_at');
+select ok(not has_function_privilege('authenticated', 'public.touch_projects_of_game()', 'execute'),
+  'authenticated cannot execute touch_projects_of_game');
+select ok(not has_function_privilege('anon', 'public.touch_projects_of_game()', 'execute'),
+  'anon cannot execute touch_projects_of_game');
 
 select * from finish();
 rollback;
