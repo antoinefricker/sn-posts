@@ -20,7 +20,7 @@ npm run dev
 
 ## Authentication (Supabase)
 
-Users sign up with **name, club ID, email and password** and sign in with email and password. Auth is handled by Supabase Auth; name and club ID are stored in `public.profiles` (created by a database trigger at sign-up, readable and editable only by its owner via row-level security). Email confirmation is off.
+Users sign up with **name, club ID, email and password** and sign in with email and password. Auth is handled by Supabase Auth; name and club ID are stored in `public.profiles` (created by a database trigger at sign-up, readable and editable only by its owner via row-level security). Email confirmation is off. **Only one account can ever be created**: a `before insert` trigger on `auth.users` rejects any sign-up once a user exists (so the Auth API can't be used to bypass it), and the sign-up form is hidden in the UI. To reopen sign-up locally, run `npx supabase db reset`.
 
 Schema lives in [`supabase/migrations`](supabase/migrations). To run it locally (requires Docker):
 

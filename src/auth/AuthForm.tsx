@@ -1,12 +1,24 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { supabase } from '../supabase'
 import { useAuth } from './AuthContext'
+
+/** Only one account may ever exist; the database enforces it, this just hides the form. */
+async function fetchSignupOpen(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('signup_open')
+  return error ? true : data === true
+}
 
 export function AuthForm() {
   const { signIn, signUp } = useAuth()
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const isSignUp = mode === 'signup'
+  const [signupOpen, setSignupOpen] = useState(false)
+  const isSignUp = mode === 'signup' && signupOpen
+
+  useEffect(() => {
+    fetchSignupOpen().then(setSignupOpen)
+  }, [])
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,7 +34,13 @@ export function AuthForm() {
           password: String(form.get('password') ?? ''),
         })
       : await signIn(field('email'), String(form.get('password') ?? ''))
-    setError(message)
+    if (message && isSignUp && !(await fetchSignupOpen())) {
+      setSignupOpen(false)
+      setMode('signin')
+      setError('Sign-up is closed: an account already exists. Please sign in.')
+    } else {
+      setError(message)
+    }
     setBusy(false)
   }
 
@@ -59,16 +77,18 @@ export function AuthForm() {
       <button type="submit" disabled={busy}>
         {busy ? 'Please wait…' : isSignUp ? 'Sign up' : 'Sign in'}
       </button>
-      <button
-        type="button"
-        className="link"
-        onClick={() => {
-          setMode(isSignUp ? 'signin' : 'signup')
-          setError(null)
-        }}
-      >
-        {isSignUp ? 'Have an account? Sign in' : 'No account? Sign up'}
-      </button>
+      {signupOpen && (
+        <button
+          type="button"
+          className="link"
+          onClick={() => {
+            setMode(isSignUp ? 'signin' : 'signup')
+            setError(null)
+          }}
+        >
+          {isSignUp ? 'Have an account? Sign in' : 'No account? Sign up'}
+        </button>
+      )}
     </form>
   )
 }
