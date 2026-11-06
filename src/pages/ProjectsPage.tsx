@@ -6,6 +6,7 @@ import { ProjectForm } from '@/components/ProjectForm'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { createProject, deleteProject, listProjects, updateProject } from '@/data/projects'
 import { toMessage } from '@/data/errors'
+import { deleteProjectDescription } from '@/lib/projects'
 import type { Project } from '@/data/types'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
@@ -16,16 +17,6 @@ function formatDate(value: string): string {
 
 function gamesLabel(count: number): string {
   return `${count} ${count === 1 ? 'game' : 'games'}`
-}
-
-function deleteDescription(count: number): string {
-  const games =
-    count === 0
-      ? 'It has no games.'
-      : count === 1
-        ? 'Its 1 game stays.'
-        : `Its ${count} games stay.`
-  return `Deletes only the project and its links. ${games}`
 }
 
 export function ProjectsPage() {
@@ -133,7 +124,7 @@ export function ProjectsPage() {
           if (!open) setDeleting(null)
         }}
         title={`Delete "${deleting?.title ?? ''}"?`}
-        description={deleteDescription(deleting?.game_count ?? 0)}
+        description={deleteProjectDescription(deleting?.game_count ?? 0)}
         confirmLabel="Delete project"
         onConfirm={handleDelete}
       />
