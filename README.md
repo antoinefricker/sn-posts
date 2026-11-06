@@ -11,16 +11,38 @@ npm install
 npm run dev
 ```
 
-| Command           | Description                         |
-| ----------------- | ----------------------------------- |
-| `npm run dev`     | Start the dev server with HMR       |
-| `npm run build`   | Type-check and build to `dist/`     |
-| `npm run preview` | Serve the production build locally  |
-| `npm run lint`    | Lint with Oxlint                    |
+### Available commands
+
+**make** (wraps the Supabase and shadcn/ui `npx` commands; Supabase local stack requires Docker)
+
+| Command                    | Runs                                        | Description                                                        |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| `make start`               | `npm run dev`                               | Start the dev server with HMR                                      |
+| `make stop`                | `pkill` on this project's Vite process      | Stop the dev server started by `make start`                        |
+| `make build`               | `npm run build`                             | Type-check and build to `dist/`                                    |
+| `make preview`             | `npm run preview`                           | Serve the production build locally                                 |
+| `make lint`                | `npm run lint`                              | Lint with Oxlint                                                   |
+| `make supabase-start`      | `npx supabase start`                        | Start the local stack (incl. edge functions) and apply migrations  |
+| `make supabase-status`     | `npx supabase status`                       | Show the local API URL and publishable key                         |
+| `make supabase-stop`       | `npx supabase stop`                         | Shut the local stack down                                          |
+| `make db-reset`            | `npx supabase db reset`                     | Rebuild the local database (reopens sign-up for a new first admin) |
+| `make link`                | `npx supabase link`                         | Link this folder to a cloud Supabase project                       |
+| `make db-push`             | `npx supabase db push`                      | Apply migrations to the linked cloud project                       |
+| `make deploy-function`     | `npx supabase functions deploy create-user` | Deploy the `create-user` edge function                             |
+| `make shadcn-add c=<name>` | `npx shadcn@latest add <name>`              | Add a shadcn/ui component                                          |
+
+**Vercel CLI**
+
+| Command                | Description                            |
+| ---------------------- | -------------------------------------- |
+| `vercel login`         | Sign in to Vercel (one-time)           |
+| `vercel link`          | Link this folder to the Vercel project |
+| `vercel deploy`        | Create a preview deployment            |
+| `vercel deploy --prod` | Create a production deployment         |
 
 ## UI
 
-Styled with [Tailwind CSS](https://tailwindcss.com) v4 and [shadcn/ui](https://ui.shadcn.com) (config in `components.json`; components live in `src/components/ui`). Add more with `npx shadcn@latest add <component>`; the `@/` import alias points to `src/`.
+Styled with [Tailwind CSS](https://tailwindcss.com) v4 and [shadcn/ui](https://ui.shadcn.com) (config in `components.json`; components live in `src/components/ui`). Add more with `make shadcn-add c=<component>`; the `@/` import alias points to `src/`.
 
 ## Authentication (Supabase)
 
@@ -35,15 +57,15 @@ Accounts have **name, club ID, email and password**; sign-in is email + password
 Schema lives in [`supabase/migrations`](supabase/migrations). To run everything locally (requires Docker):
 
 ```bash
-npx supabase start     # starts the local stack (incl. edge functions) and applies migrations
-npx supabase status    # shows the API URL and publishable key
+make supabase-start     # starts the local stack (incl. edge functions) and applies migrations
+make supabase-status    # shows the API URL and publishable key
 cp .env.example .env.local   # then fill in VITE_SUPABASE_ANON_KEY
 npm run dev
 ```
 
-`npx supabase db reset` rebuilds the local database (and reopens sign-up for a new first admin); `npx supabase stop` shuts the stack down.
+`make db-reset` rebuilds the local database (and reopens sign-up for a new first admin); `make supabase-stop` shuts the stack down.
 
-On a cloud project, apply the schema and deploy the function: `npx supabase link`, `npx supabase db push`, `npx supabase functions deploy create-user`.
+On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`.
 
 ## Deploying to Vercel
 
