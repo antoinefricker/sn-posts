@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# sn-posts
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A React + TypeScript web app built with [Vite](https://vite.dev), linted with [Oxlint](https://oxc.rs), and deployed on [Vercel](https://vercel.com).
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requires Node 24 (see `.nvmrc`).
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+| Command           | Description                         |
+| ----------------- | ----------------------------------- |
+| `npm run dev`     | Start the dev server with HMR       |
+| `npm run build`   | Type-check and build to `dist/`     |
+| `npm run preview` | Serve the production build locally  |
+| `npm run lint`    | Lint with Oxlint                    |
+
+## Deploying to Vercel
+
+### Prerequisites
+
+- Node 24 (pinned in `package.json` `engines` and `.nvmrc`)
+- The Vercel CLI: `npm i -g vercel`
+
+### Configuration
+
+Project settings live in [`vercel.ts`](vercel.ts) (via `@vercel/config`):
+
+- **Build**: Vite framework preset, `npm run build`, output in `dist/`
+- **SPA rewrite**: every path falls back to `/index.html` so client-side routes work on refresh (static files are still served first)
+- **Asset caching**: `/assets/*` is served with `public, max-age=31536000, immutable`, since Vite hashes the filenames
+
+### Deploy
+
+```bash
+vercel login            # one-time browser sign-in
+vercel link             # link this folder to the Vercel project
+vercel deploy           # preview deployment
+vercel deploy --prod    # production deployment
+```
+
+Latest deployment: https://sn-posts-ok1d2xyn3-antoinefricker.vercel.app (Vercel Deployment Protection is on, so it requires a Vercel login)
