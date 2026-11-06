@@ -5,6 +5,7 @@ import { ProjectForm } from '@/components/ProjectForm'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { AddGameDialog } from '@/components/AddGameDialog'
+import { GameActions } from '@/components/GameActions'
 import { GameRow } from '@/components/GameRow'
 import { listProjectGames } from '@/data/games'
 import { deleteProject, getProject, updateProject } from '@/data/projects'
@@ -152,7 +153,10 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           <ul className="grid gap-3">
             {games.map((game) => (
               <li key={game.id}>
-                <GameRow game={game} />
+                <GameRow
+                  game={game}
+                  actions={<GameActions game={game} projectId={project.id} onChanged={refresh} />}
+                />
               </li>
             ))}
           </ul>
