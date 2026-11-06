@@ -70,7 +70,7 @@ export function ConfirmDialog({
         )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
-          <Button variant="destructive" disabled={busy} onClick={handleConfirm}>
+          <Button variant="destructive" disabled={busy} aria-busy={busy} onClick={handleConfirm}>
             {busy ? 'Working…' : confirmLabel}
           </Button>
         </AlertDialogFooter>
