@@ -11,12 +11,49 @@ npm install
 npm run dev
 ```
 
+### Available commands
+
+**npm scripts**
+
 | Command           | Description                         |
 | ----------------- | ----------------------------------- |
 | `npm run dev`     | Start the dev server with HMR       |
 | `npm run build`   | Type-check and build to `dist/`     |
 | `npm run preview` | Serve the production build locally  |
 | `npm run lint`    | Lint with Oxlint                    |
+
+**make**
+
+| Command     | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| `make stop` | Stop the local Supabase stack (same as `npx supabase stop`)  |
+
+**Supabase CLI** (local stack requires Docker)
+
+| Command                                      | Description                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------ |
+| `npx supabase start`                         | Start the local stack (incl. edge functions) and apply migrations        |
+| `npx supabase status`                        | Show the local API URL and publishable key                               |
+| `npx supabase stop`                          | Shut the local stack down                                                |
+| `npx supabase db reset`                      | Rebuild the local database (reopens sign-up for a new first admin)       |
+| `npx supabase link`                          | Link this folder to a cloud Supabase project                             |
+| `npx supabase db push`                       | Apply migrations to the linked cloud project                             |
+| `npx supabase functions deploy create-user`  | Deploy the `create-user` edge function                                   |
+
+**Vercel CLI**
+
+| Command                | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| `vercel login`         | Sign in to Vercel (one-time)                 |
+| `vercel link`          | Link this folder to the Vercel project       |
+| `vercel deploy`        | Create a preview deployment                  |
+| `vercel deploy --prod` | Create a production deployment               |
+
+**shadcn/ui**
+
+| Command                          | Description              |
+| -------------------------------- | ------------------------ |
+| `npx shadcn@latest add <name>`   | Add a UI component       |
 
 ## UI
 
