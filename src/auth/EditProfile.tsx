@@ -1,12 +1,21 @@
 import { useState, type FormEvent } from 'react'
+import { FormField } from '@/components/FormField'
+import { FormMessage, type FormMessageValue } from '@/components/FormMessage'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { useAuth } from './AuthContext'
-
-type Message = { ok: boolean; text: string } | null
 
 /** Lets the signed-in user edit their own information. */
 export function EditProfile() {
   const { session, profile, updateProfile, updateAccount } = useAuth()
-  const [message, setMessage] = useState<Message>(null)
+  const [message, setMessage] = useState<FormMessageValue>(null)
   const [busy, setBusy] = useState(false)
 
   if (!session || !profile) return null
@@ -50,7 +59,7 @@ export function EditProfile() {
     if (passwordInput instanceof HTMLInputElement) passwordInput.value = ''
     finish({ ok: true, text: notes.length ? notes.join('. ') + '.' : 'Nothing to change.' })
 
-    function finish(m: Message) {
+    function finish(m: FormMessageValue) {
       setMessage(m)
       setBusy(false)
     }
@@ -58,36 +67,38 @@ export function EditProfile() {
 
   return (
     // Re-key on saved values so the inputs reset to what is stored.
-    <form
-      key={`${profile.name}|${profile.club_id}|${currentEmail}`}
-      className="auth-form admin-form"
-      onSubmit={onSubmit}
-    >
-      <h2>Your information</h2>
-      <label>
-        Name
-        <input name="name" defaultValue={profile.name} required />
-      </label>
-      <label>
-        Club ID
-        <input name="clubId" defaultValue={profile.club_id} required />
-      </label>
-      <label>
-        Email
-        <input name="email" type="email" defaultValue={currentEmail} autoComplete="email" required />
-      </label>
-      <label>
-        New password (leave empty to keep the current one)
-        <input name="password" type="password" minLength={6} autoComplete="new-password" />
-      </label>
-      {message && (
-        <p role={message.ok ? 'status' : 'alert'} className={message.ok ? 'auth-ok' : 'auth-error'}>
-          {message.text}
-        </p>
-      )}
-      <button type="submit" disabled={busy}>
-        {busy ? 'Saving…' : 'Save changes'}
-      </button>
-    </form>
+    <Card key={`${profile.name}|${profile.club_id}|${currentEmail}`}>
+      <form onSubmit={onSubmit} className="grid gap-4">
+        <CardHeader>
+          <CardTitle>Your information</CardTitle>
+          <CardDescription>Update your name, club, email or password.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <FormField label="Name" name="name" defaultValue={profile.name} required />
+          <FormField label="Club ID" name="clubId" defaultValue={profile.club_id} required />
+          <FormField
+            label="Email"
+            name="email"
+            type="email"
+            defaultValue={currentEmail}
+            autoComplete="email"
+            required
+          />
+          <FormField
+            label="New password (leave empty to keep the current one)"
+            name="password"
+            type="password"
+            minLength={6}
+            autoComplete="new-password"
+          />
+          <FormMessage message={message} />
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" disabled={busy}>
+            {busy ? 'Saving…' : 'Save changes'}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   )
 }

@@ -18,6 +18,10 @@ npm run dev
 | `npm run preview` | Serve the production build locally  |
 | `npm run lint`    | Lint with Oxlint                    |
 
+## UI
+
+Styled with [Tailwind CSS](https://tailwindcss.com) v4 and [shadcn/ui](https://ui.shadcn.com) (config in `components.json`; components live in `src/components/ui`). Add more with `npx shadcn@latest add <component>`; the `@/` import alias points to `src/`.
+
 ## Authentication (Supabase)
 
 Accounts have **name, club ID, email and password**; sign-in is email + password via Supabase Auth, and name / club ID / admin flag live in `public.profiles` (row-level security: users read and edit only their own profile, and can never change `is_admin`). Email confirmation is off.
