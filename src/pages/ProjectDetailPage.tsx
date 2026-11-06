@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ProjectForm } from '@/components/ProjectForm'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
+import { AddGameDialog } from '@/components/AddGameDialog'
 import { GameRow } from '@/components/GameRow'
 import { listProjectGames } from '@/data/games'
 import { deleteProject, getProject, updateProject } from '@/data/projects'
@@ -29,6 +30,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
   const [state, setState] = useState<ProjectState>({ status: 'loading' })
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -129,9 +131,12 @@ function ProjectDetail({ projectId }: { projectId: string }) {
         </div>
       </div>
       <section className="grid gap-3" aria-labelledby="games-heading">
-        <h2 id="games-heading" className="text-lg font-semibold">
-          Games
-        </h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="games-heading" className="text-lg font-semibold">
+            Games
+          </h2>
+          <Button onClick={() => setAddOpen(true)}>Add game</Button>
+        </div>
         {gamesError ? (
           <div role="alert" className="grid justify-items-start gap-2">
             <p className="text-sm text-destructive">{gamesError}</p>
@@ -153,6 +158,12 @@ function ProjectDetail({ projectId }: { projectId: string }) {
           </ul>
         )}
       </section>
+      <AddGameDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        projectId={project.id}
+        onAdded={refresh}
+      />
       <ProjectForm open={editOpen} onOpenChange={setEditOpen} initial={project} onSubmit={handleEdit} />
       <ConfirmDialog
         open={deleteOpen}
