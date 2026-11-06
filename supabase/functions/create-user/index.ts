@@ -60,14 +60,25 @@ Deno.serve(async (req) => {
 
   // GoTrue does not pass admin-supplied app_metadata to the database triggers, and user metadata
   // is client-controlled. So the caller's club and the admin flag travel in a short-lived invite
-  // row (service role only) that the sign-up triggers check and consume.
+  // row (service role only, honored for one minute) that the sign-up triggers check and consume.
   const inviteEmail = email.toLowerCase()
-  const { error: inviteError } = await admin
-    .from('user_invites')
-    .upsert({ email: inviteEmail, club_id: profile.club_id, make_admin: makeAdmin })
-  if (inviteError) return json({ error: inviteError.message }, 500)
-
+  let inserted = false
   try {
+    // Stale rows must not block a new invite (the primary key is the email).
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString()
+    await admin.from('user_invites').delete().eq('email', inviteEmail).lt('created_at', oneMinuteAgo)
+
+    const { error: inviteError } = await admin
+      .from('user_invites')
+      .insert({ email: inviteEmail, club_id: profile.club_id, make_admin: makeAdmin })
+    if (inviteError) {
+      if (inviteError.code === '23505') {
+        return json({ error: 'An account for this email is already being created. Try again shortly.' }, 409)
+      }
+      return json({ error: inviteError.message }, 500)
+    }
+    inserted = true
+
     const { data, error } = await admin.auth.admin.createUser({
       email,
       password,
@@ -76,8 +87,15 @@ Deno.serve(async (req) => {
     })
     if (error) return json({ error: error.message }, 400)
     return json({ id: data.user.id, email: data.user.email, isAdmin: makeAdmin }, 201)
+  } catch (e) {
+    console.error('create-user failed', e)
+    return json({ error: 'Could not create the account' }, 500)
   } finally {
-    // Consumed on success; this clears it when creation failed (e.g. email already taken).
-    await admin.from('user_invites').delete().eq('email', inviteEmail)
+    // Consumed on success; this clears our own invite when creation failed (e.g. email taken).
+    // Never delete a row we did not insert: it belongs to another admin's in-flight call.
+    if (inserted) {
+      const { error: cleanupError } = await admin.from('user_invites').delete().eq('email', inviteEmail)
+      if (cleanupError) console.error('create-user: invite cleanup failed', cleanupError)
+    }
   }
 })
