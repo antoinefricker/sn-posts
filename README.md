@@ -48,13 +48,13 @@ Styled with [Tailwind CSS](https://tailwindcss.com) v4 and [shadcn/ui](https://u
 
 ## Authentication (Supabase)
 
-Accounts have **name, club ID, email and password**; sign-in is email + password via Supabase Auth, and name / club ID / admin flag live in `public.profiles` (row-level security: users read and edit only their own profile, and can never change `is_admin`). Email confirmation is off.
+Accounts have a **name, email and password** and belong to a **club**; sign-in is email + password via Supabase Auth. The name, the club link and the admin flag live in `public.profiles`, and clubs live in `public.clubs` (each has a UUID, a unique **code** and a **name**). Email confirmation is off.
 
-**Roles**
+**Roles (per club)**
 
-- The **first account** to sign up becomes an **admin**. Public sign-up is then closed (a `before insert` trigger on `auth.users` rejects it, so the Auth API can't be used to bypass it) and the sign-up form disappears.
-- **Every user** can edit their own name, club ID, email and password from the "Your information" form (RLS allows updates to their own row only, and never to `is_admin`). If the project requires email-change confirmation, the new address takes effect after the user confirms it.
-- **Admins** get a "Create a user account" form after signing in, optionally making the new user an admin too. It calls the [`create-user`](supabase/functions/create-user/index.ts) edge function, which verifies the caller is an admin and creates the user with the service-role key (never exposed to the browser).
+- The **first account** to sign up creates the club (the sign-up form asks for a club code and a club name) and becomes its **admin**. Public sign-up is then closed (a `before insert` trigger on `auth.users` rejects it, so the Auth API can't be used to bypass it) and the sign-up form disappears.
+- **Club admins** get a "User creation" page after signing in, optionally making the new user an admin too. It calls the [`create-user`](supabase/functions/create-user/index.ts) edge function, which verifies the caller is an admin and creates the user in the **caller's own club** (any club in the request body is ignored) with the service-role key (never exposed to the browser). To get the new account past the closed sign-up gate and into the right club, the function writes a short-lived row (valid for 1 minute) into `public.user_invites`, which only the service role can access; the sign-up triggers check and consume it.
+- **Every user** can edit their own name, email and password from the "User edition" page. Users cannot change their club or admin flag (RLS only allows updating the `name` column of the profile). If the project requires email-change confirmation, the new address takes effect after the user confirms it.
 
 Schema lives in [`supabase/migrations`](supabase/migrations). To run everything locally (requires Docker):
 
