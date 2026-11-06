@@ -1,4 +1,4 @@
-.PHONY: start stop build preview lint supabase-start supabase-status supabase-stop db-reset link db-push deploy-function shadcn-add
+.PHONY: start stop build preview lint supabase-start supabase-status supabase-stop db-reset db-test link db-push deploy-function shadcn-add
 
 # Start the dev server with HMR
 start:
@@ -35,6 +35,10 @@ supabase-stop:
 # Rebuild the local database (reopens sign-up for a new first admin)
 db-reset:
 	npx supabase db reset
+
+# Run the pgTAP database tests
+db-test:
+	npx supabase test db
 
 # Link this folder to a cloud Supabase project
 link:

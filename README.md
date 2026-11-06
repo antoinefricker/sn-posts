@@ -26,6 +26,7 @@ npm run dev
 | `make supabase-status`     | `npx supabase status`                       | Show the local API URL and publishable key                         |
 | `make supabase-stop`       | `npx supabase stop`                         | Shut the local stack down                                          |
 | `make db-reset`            | `npx supabase db reset`                     | Rebuild the local database (reopens sign-up for a new first admin) |
+| `make db-test`             | `npx supabase test db`                      | Run the pgTAP database tests                                       |
 | `make link`                | `npx supabase link`                         | Link this folder to a cloud Supabase project                       |
 | `make db-push`             | `npx supabase db push`                      | Apply migrations to the linked cloud project                       |
 | `make deploy-function`     | `npx supabase functions deploy create-user` | Deploy the `create-user` edge function                             |
