@@ -1,12 +1,17 @@
-import { LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { AdminCreateUser } from './auth/AdminCreateUser'
+import { Route, Routes } from 'react-router'
 import { AuthForm } from './auth/AuthForm'
 import { useAuth } from './auth/AuthContext'
-import { EditProfile } from './auth/EditProfile'
+import { AdminRoute } from './layout/AdminRoute'
+import { AppLayout } from './layout/AppLayout'
+import { AccountPage } from './pages/AccountPage'
+import { CreateUserPage } from './pages/CreateUserPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { GamesPage } from './pages/GamesPage'
+import { ProjectDetailPage } from './pages/ProjectDetailPage'
+import { ProjectsPage } from './pages/ProjectsPage'
 
 function App() {
-  const { session, profile, loading, signOut } = useAuth()
+  const { session, loading } = useAuth()
 
   if (loading) {
     return (
@@ -18,35 +23,19 @@ function App() {
   if (!session) return <AuthForm />
 
   return (
-    <div className="min-h-svh bg-muted/40">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <span className="font-semibold">sn-posts</span>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">
-              {profile?.name ?? session.user.email}
-              {profile?.is_admin && ' · admin'}
-            </span>
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut /> Sign out
-            </Button>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto grid max-w-4xl gap-6 p-4 py-8 md:grid-cols-2 md:items-start">
-        <div className="md:col-span-2">
-          <h1 className="text-2xl font-semibold">
-            Welcome{profile ? `, ${profile.name}` : ''}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {session.user.email}
-            {profile && ` · Club ${profile.club.name}`}
-          </p>
-        </div>
-        <EditProfile />
-        {profile?.is_admin && <AdminCreateUser />}
-      </main>
-    </div>
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="projects" element={<ProjectsPage />} />
+        <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+        <Route path="games" element={<GamesPage />} />
+        <Route path="account" element={<AccountPage />} />
+        <Route element={<AdminRoute />}>
+          <Route path="users/new" element={<CreateUserPage />} />
+        </Route>
+        <Route path="*" element={<DashboardPage />} />
+      </Route>
+    </Routes>
   )
 }
 
