@@ -14,10 +14,10 @@ create function pg_temp.create_test_user(p_email text, p_club uuid, p_admin bool
 returns uuid language plpgsql as $$
 declare v_id uuid := gen_random_uuid();
 begin
+  insert into public.user_invites (email, club_id, make_admin) values (lower(p_email), p_club, p_admin);
   insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
   values (v_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', p_email,
-    jsonb_build_object('name', p_email),
-    jsonb_build_object('created_by_admin', true, 'club_id', p_club, 'make_admin', p_admin));
+    jsonb_build_object('name', p_email), '{}');
   return v_id;
 end $$;
 
