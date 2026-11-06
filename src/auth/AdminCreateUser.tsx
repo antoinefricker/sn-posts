@@ -29,7 +29,6 @@ export function AdminCreateUser() {
     const { data, error } = await supabase.functions.invoke('create-user', {
       body: {
         name: String(form.get('name') ?? '').trim(),
-        clubId: String(form.get('clubId') ?? '').trim(),
         email: String(form.get('email') ?? '').trim(),
         password: String(form.get('password') ?? ''),
         isAdmin,
@@ -56,11 +55,10 @@ export function AdminCreateUser() {
       <form onSubmit={onSubmit} className="grid gap-4">
         <CardHeader>
           <CardTitle>Create a user account</CardTitle>
-          <CardDescription>Admins can add new users, and make them admins too.</CardDescription>
+          <CardDescription>New users join your club. You can make them admins too.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <FormField label="Name" name="name" required />
-          <FormField label="Club ID" name="clubId" required />
           <FormField label="Email" name="email" type="email" required />
           <FormField
             label="Password"
