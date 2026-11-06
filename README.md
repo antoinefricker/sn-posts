@@ -22,12 +22,12 @@ npm run dev
 | `make build`               | `npm run build`                             | Type-check and build to `dist/`                                    |
 | `make preview`             | `npm run preview`                           | Serve the production build locally                                 |
 | `make lint`                | `npm run lint`                              | Lint with Oxlint                                                   |
-| `make test`                | `npm test`                                  | Run the Vitest unit tests                                          |
+| `make test`                | `npm test`                                  | Run the Vitest unit tests (no Docker or Supabase needed)           |
 | `make supabase-start`      | `npx supabase start`                        | Start the local stack (incl. edge functions) and apply migrations  |
 | `make supabase-status`     | `npx supabase status`                       | Show the local API URL and publishable key                         |
 | `make supabase-stop`       | `npx supabase stop`                         | Shut the local stack down                                          |
 | `make db-reset`            | `npx supabase db reset`                     | Rebuild the local database (reopens sign-up for a new first admin) |
-| `make db-test`             | `npx supabase test db`                      | Run the pgTAP database tests                                       |
+| `make db-test`             | `npx supabase test db`                      | Run the pgTAP database tests (needs the local stack running)       |
 | `make link`                | `npx supabase link`                         | Link this folder to a cloud Supabase project                       |
 | `make db-push`             | `npx supabase db push`                      | Apply migrations to the linked cloud project                       |
 | `make deploy-function`     | `npx supabase functions deploy create-user` | Deploy the `create-user` edge function                             |
@@ -68,6 +68,11 @@ npm run dev
 `make db-reset` rebuilds the local database (and reopens sign-up for a new first admin); `make supabase-stop` shuts the stack down.
 
 On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`.
+
+**Local development notes**
+
+- After `make supabase-start` or `make db-reset`, restart the edge runtime container with `docker restart supabase_edge_runtime_sn-posts`; otherwise `create-user` answers `BOOT_ERROR`.
+- The clubs migration turns the text club IDs of existing accounts into club records (code = name = the old value). That path was only tested on an empty database: check it manually on a populated one before running `make db-push` against a cloud project.
 
 ## Clubs, projects and games
 
