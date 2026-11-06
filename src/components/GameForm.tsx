@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { FormField } from '@/components/FormField'
 import { FormMessage } from '@/components/FormMessage'
@@ -11,6 +11,8 @@ type GameFormProps = {
   initial?: Game
   usedInProjects?: number
   onSubmit: (input: GameInput) => Promise<void>
+  /** Notified when a save starts and ends, so a wrapping dialog can ignore close requests meanwhile. */
+  onBusyChange?: (busy: boolean) => void
   onCancel: () => void
 }
 
@@ -31,7 +33,7 @@ function parseScore(value: string): number | null {
   return Number.isInteger(n) && n >= 0 ? n : Number.NaN
 }
 
-export function GameForm({ initial, usedInProjects = 0, onSubmit, onCancel }: GameFormProps) {
+export function GameForm({ initial, usedInProjects = 0, onSubmit, onBusyChange, onCancel }: GameFormProps) {
   const [code, setCode] = useState(initial?.code ?? '')
   const [teamName, setTeamName] = useState(initial?.team_name ?? '')
   const [opponent, setOpponent] = useState(initial?.opponent_name ?? '')
@@ -42,10 +44,12 @@ export function GameForm({ initial, usedInProjects = 0, onSubmit, onCancel }: Ga
   const [scoreTheirs, setScoreTheirs] = useState(initial?.score_theirs?.toString() ?? '')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // A ref guards against two submits in the same tick, before `busy` re-renders.
+  const submitting = useRef(false)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (busy) return
+    if (submitting.current) return
     const trimmedCode = normalizeGameCode(code)
     const team = teamName.trim()
     const opp = opponent.trim()
@@ -64,7 +68,9 @@ export function GameForm({ initial, usedInProjects = 0, onSubmit, onCancel }: Ga
       return
     }
     setError(null)
+    submitting.current = true
     setBusy(true)
+    onBusyChange?.(true)
     try {
       await onSubmit({
         code: trimmedCode,
@@ -79,7 +85,9 @@ export function GameForm({ initial, usedInProjects = 0, onSubmit, onCancel }: Ga
     } catch (e) {
       setError(toMessage(e))
     } finally {
+      submitting.current = false
       setBusy(false)
+      onBusyChange?.(false)
     }
   }
 
@@ -87,80 +95,82 @@ export function GameForm({ initial, usedInProjects = 0, onSubmit, onCancel }: Ga
     <form onSubmit={handleSubmit} noValidate className="grid gap-4">
       {usedInProjects > 0 && (
         <p className="text-sm text-muted-foreground">
-          Used in {usedInProjects} projects — changes apply everywhere
+          Used in {usedInProjects} {usedInProjects === 1 ? 'project' : 'projects'} — changes apply everywhere
         </p>
       )}
-      <FormField
-        label="Code"
-        name="code"
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-        required
-      />
-      <FormField
-        label="Team name"
-        name="team_name"
-        value={teamName}
-        onChange={(e) => setTeamName(e.target.value)}
-        required
-      />
-      <FormField
-        label="Opponent"
-        name="opponent_name"
-        value={opponent}
-        onChange={(e) => setOpponent(e.target.value)}
-        required
-      />
-      <div className="grid grid-cols-2 gap-4">
+      <fieldset disabled={busy} className="grid min-w-0 gap-4 border-0 p-0">
         <FormField
-          label="Date"
-          name="game_date"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          label="Code"
+          name="code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
           required
         />
         <FormField
-          label="Kick-off"
-          name="kickoff_time"
-          type="time"
-          value={kickoff}
-          onChange={(e) => setKickoff(e.target.value)}
+          label="Team name"
+          name="team_name"
+          value={teamName}
+          onChange={(e) => setTeamName(e.target.value)}
           required
         />
-      </div>
-      <div className="grid gap-1">
         <FormField
-          label="Location"
-          name="location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          aria-describedby="field-location-hint"
+          label="Opponent"
+          name="opponent_name"
+          value={opponent}
+          onChange={(e) => setOpponent(e.target.value)}
+          required
         />
-        <p id="field-location-hint" className="text-xs text-muted-foreground">
-          Leave empty for a home game
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <FormField
-          label="Our score"
-          name="score_ours"
-          type="number"
-          min={0}
-          step={1}
-          value={scoreOurs}
-          onChange={(e) => setScoreOurs(e.target.value)}
-        />
-        <FormField
-          label="Their score"
-          name="score_theirs"
-          type="number"
-          min={0}
-          step={1}
-          value={scoreTheirs}
-          onChange={(e) => setScoreTheirs(e.target.value)}
-        />
-      </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="Date"
+            name="game_date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+          <FormField
+            label="Kick-off"
+            name="kickoff_time"
+            type="time"
+            value={kickoff}
+            onChange={(e) => setKickoff(e.target.value)}
+            required
+          />
+        </div>
+        <div className="grid gap-1">
+          <FormField
+            label="Location"
+            name="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            aria-describedby="field-location-hint"
+          />
+          <p id="field-location-hint" className="text-xs text-muted-foreground">
+            Leave empty for a home game
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="Our score"
+            name="score_ours"
+            type="number"
+            min={0}
+            step={1}
+            value={scoreOurs}
+            onChange={(e) => setScoreOurs(e.target.value)}
+          />
+          <FormField
+            label="Their score"
+            name="score_theirs"
+            type="number"
+            min={0}
+            step={1}
+            value={scoreTheirs}
+            onChange={(e) => setScoreTheirs(e.target.value)}
+          />
+        </div>
+      </fieldset>
       <FormMessage message={error ? { ok: false, text: error } : null} />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>

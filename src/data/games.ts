@@ -26,8 +26,18 @@ function toGameWithProjects({ project_games, link: _link, ...row }: GameRowWithP
   }
 }
 
+/** Picks exactly the GameInput columns, so a full Game passed by mistake never sends id/created_by. */
 function toPayload(input: GameInput): GameInput {
-  return { ...input, code: normalizeGameCode(input.code) }
+  return {
+    code: normalizeGameCode(input.code),
+    team_name: input.team_name,
+    opponent_name: input.opponent_name,
+    game_date: input.game_date,
+    kickoff_time: input.kickoff_time,
+    location: input.location,
+    score_ours: input.score_ours,
+    score_theirs: input.score_theirs,
+  }
 }
 
 export async function listGames(): Promise<GameWithProjects[]> {
