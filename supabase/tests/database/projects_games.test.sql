@@ -1,5 +1,5 @@
 begin;
-select plan(43);
+select plan(51);
 
 -- Club A: first user via the public sign-up path.
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
@@ -152,6 +152,34 @@ select is((select count(*)::int from public.project_games), 1, 'deleting a game 
 select lives_ok($$delete from public.projects$$, 'delete a project');
 select is((select count(*)::int from public.project_games), 0, 'deleting a project removes its links');
 select is((select count(*)::int from public.games), 1, 'deleting a project keeps its games');
+
+-- Extra isolation and uniqueness cases
+select lives_ok(
+  $$insert into public.games (code, team_name, opponent_name, game_date, kickoff_time)
+    values ('ZZ9', 'U13', 'Other', '2026-12-05', '10:00')$$,
+  'second club A game for collision test');
+select throws_ok($$update public.games set code = 'ab12' where code = 'ZZ9'$$,
+  '23505', null, 'updating a game code to collide in the same club is rejected');
+
+select lives_ok(
+  $$insert into public.projects (id, title) values ('55555555-5555-5555-5555-555555555555', 'Season 2')$$,
+  'club A project for link isolation');
+select lives_ok(
+  $$insert into public.project_games (project_id, game_id) values
+    ('55555555-5555-5555-5555-555555555555', '22222222-2222-2222-2222-222222222222')$$,
+  'club A link for isolation');
+
+select set_config('request.jwt.claims', json_build_object('sub', :'m2', 'role', 'authenticated')::text, true);
+select lives_ok($$delete from public.project_games$$, 'club B delete of club A links is a no-op');
+select lives_ok($$insert into public.projects (id, title) values ('66666666-6666-6666-6666-666666666666', 'B project')$$,
+  'club B creates a project');
+select throws_ok(
+  $$insert into public.project_games (project_id, game_id) values
+    ('66666666-6666-6666-6666-666666666666', '22222222-2222-2222-2222-222222222222')$$,
+  '23503', null, 'a link cannot pair a club B project with a club A game');
+
+select set_config('request.jwt.claims', json_build_object('sub', :'m1', 'role', 'authenticated')::text, true);
+select is((select count(*)::int from public.project_games), 1, 'club A link survived club B delete');
 
 select ok(not has_function_privilege('authenticated', 'public.set_updated_at()', 'execute'),
   'authenticated cannot execute set_updated_at');
