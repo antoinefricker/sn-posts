@@ -28,7 +28,7 @@ export function GameRow({ game, actions }: GameRowProps) {
           </p>
           <p className="text-sm text-muted-foreground">
             {formatGameWhen(game)} · {isHomeGame(game) ? 'Home' : game.location} ·{' '}
-            <span aria-label="Score">{score ?? '—'}</span> · {game.creator_name ?? 'Unknown'}
+            <span aria-label="Score">{score ?? '—'}</span> · {game.creator_name ?? 'Unknown member'}
           </p>
         </div>
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

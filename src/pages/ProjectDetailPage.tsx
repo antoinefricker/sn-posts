@@ -118,7 +118,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
         <div className="grid gap-1">
           <h1 className="text-2xl font-semibold">{project.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {project.creator_name ?? 'Unknown'} · Created {dateFormat.format(new Date(project.created_at))}{' '}
+            {project.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(project.created_at))}{' '}
             · Updated {dateFormat.format(new Date(project.updated_at))}
           </p>
         </div>

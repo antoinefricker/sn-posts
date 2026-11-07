@@ -3,7 +3,7 @@ export type Project = {
   title: string
   created_at: string
   updated_at: string
-  created_by: string
+  created_by: string | null
   creator_name: string | null
   game_count: number
 }
@@ -21,7 +21,7 @@ export type GameInput = {
 
 export type Game = GameInput & {
   id: string
-  created_by: string
+  created_by: string | null
   creator_name: string | null
   created_at: string
   updated_at: string

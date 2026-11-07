@@ -94,7 +94,7 @@ export function ProjectsPage() {
                       {project.title}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {project.creator_name ?? 'Unknown'} · Created {formatDate(project.created_at)}{' '}
+                      {project.creator_name ?? 'Unknown member'} · Created {formatDate(project.created_at)}{' '}
                       · Updated {formatDate(project.updated_at)} · {gamesLabel(project.game_count)}
                     </p>
                   </div>
