@@ -3,8 +3,8 @@ select plan(23);
 
 -- Clean slate: the tests assume an empty database (the first user goes through the public
 -- sign-up path). Everything runs in this transaction, which is rolled back at the end.
-delete from public.project_games;
-delete from public.projects;
+delete from public.campaign_games;
+delete from public.campaigns;
 delete from public.games;
 delete from public.user_invites;
 delete from auth.users;

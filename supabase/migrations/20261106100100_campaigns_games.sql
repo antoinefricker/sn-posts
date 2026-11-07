@@ -1,7 +1,7 @@
--- Projects, games and project<->game links. Everything is scoped to a club by RLS;
+-- Campaigns, games and campaign<->game links. Everything is scoped to a club by RLS;
 -- composite foreign keys guarantee a link can never cross clubs.
 
-create table public.projects (
+create table public.campaigns (
   id uuid primary key default gen_random_uuid(),
   club_id uuid not null default public.current_club_id() references public.clubs (id),
   created_by uuid not null default auth.uid() references public.profiles (id),
@@ -34,18 +34,18 @@ create table public.games (
 
 create unique index games_club_code_key on public.games (club_id, lower(btrim(code, E' \t\r\n')));
 
-create table public.project_games (
-  project_id uuid not null,
+create table public.campaign_games (
+  campaign_id uuid not null,
   game_id uuid not null,
   club_id uuid not null default public.current_club_id(),
-  primary key (project_id, game_id),
-  foreign key (project_id, club_id) references public.projects (id, club_id) on delete cascade,
+  primary key (campaign_id, game_id),
+  foreign key (campaign_id, club_id) references public.campaigns (id, club_id) on delete cascade,
   foreign key (game_id, club_id) references public.games (id, club_id) on delete cascade
 );
 
-create index projects_club_id_idx on public.projects (club_id);
+create index campaigns_club_id_idx on public.campaigns (club_id);
 create index games_club_id_idx on public.games (club_id);
-create index project_games_game_id_idx on public.project_games (game_id);
+create index campaign_games_game_id_idx on public.campaign_games (game_id);
 
 -- Triggers
 create function public.set_updated_at()
@@ -59,7 +59,7 @@ begin
 end;
 $$;
 
-create function public.touch_projects_of_game()
+create function public.touch_campaigns_of_game()
 returns trigger
 language plpgsql
 security definer
@@ -67,44 +67,44 @@ set search_path = ''
 as $$
 begin
   if tg_table_name = 'games' then
-    update public.projects set updated_at = clock_timestamp()
-    where id in (select project_id from public.project_games where game_id = new.id);
+    update public.campaigns set updated_at = clock_timestamp()
+    where id in (select campaign_id from public.campaign_games where game_id = new.id);
   elsif tg_op = 'DELETE' then
-    update public.projects set updated_at = clock_timestamp() where id = old.project_id;
+    update public.campaigns set updated_at = clock_timestamp() where id = old.campaign_id;
   else
-    update public.projects set updated_at = clock_timestamp() where id = new.project_id;
+    update public.campaigns set updated_at = clock_timestamp() where id = new.campaign_id;
   end if;
   return null;
 end;
 $$;
 
 revoke all on function public.set_updated_at() from public, anon, authenticated;
-revoke all on function public.touch_projects_of_game() from public, anon, authenticated;
+revoke all on function public.touch_campaigns_of_game() from public, anon, authenticated;
 
-create trigger projects_set_updated_at before update on public.projects
+create trigger campaigns_set_updated_at before update on public.campaigns
   for each row execute function public.set_updated_at();
 create trigger games_set_updated_at before update on public.games
   for each row execute function public.set_updated_at();
-create trigger games_touch_projects after update on public.games
-  for each row execute function public.touch_projects_of_game();
-create trigger project_games_touch_projects_ins after insert on public.project_games
-  for each row execute function public.touch_projects_of_game();
-create trigger project_games_touch_projects_del after delete on public.project_games
-  for each row execute function public.touch_projects_of_game();
+create trigger games_touch_campaigns after update on public.games
+  for each row execute function public.touch_campaigns_of_game();
+create trigger campaign_games_touch_campaigns_ins after insert on public.campaign_games
+  for each row execute function public.touch_campaigns_of_game();
+create trigger campaign_games_touch_campaigns_del after delete on public.campaign_games
+  for each row execute function public.touch_campaigns_of_game();
 
 -- Row level security
-alter table public.projects enable row level security;
+alter table public.campaigns enable row level security;
 alter table public.games enable row level security;
-alter table public.project_games enable row level security;
+alter table public.campaign_games enable row level security;
 
-create policy "Members read club projects" on public.projects for select to authenticated
+create policy "Members read club campaigns" on public.campaigns for select to authenticated
   using (club_id = (select public.current_club_id()));
-create policy "Members create club projects" on public.projects for insert to authenticated
+create policy "Members create club campaigns" on public.campaigns for insert to authenticated
   with check (club_id = (select public.current_club_id()) and created_by = (select auth.uid()));
-create policy "Members update club projects" on public.projects for update to authenticated
+create policy "Members update club campaigns" on public.campaigns for update to authenticated
   using (club_id = (select public.current_club_id()))
   with check (club_id = (select public.current_club_id()));
-create policy "Members delete club projects" on public.projects for delete to authenticated
+create policy "Members delete club campaigns" on public.campaigns for delete to authenticated
   using (club_id = (select public.current_club_id()));
 
 create policy "Members read club games" on public.games for select to authenticated
@@ -117,16 +117,16 @@ create policy "Members update club games" on public.games for update to authenti
 create policy "Members delete club games" on public.games for delete to authenticated
   using (club_id = (select public.current_club_id()));
 
-create policy "Members read club links" on public.project_games for select to authenticated
+create policy "Members read club links" on public.campaign_games for select to authenticated
   using (club_id = (select public.current_club_id()));
-create policy "Members create club links" on public.project_games for insert to authenticated
+create policy "Members create club links" on public.campaign_games for insert to authenticated
   with check (club_id = (select public.current_club_id()));
-create policy "Members delete club links" on public.project_games for delete to authenticated
+create policy "Members delete club links" on public.campaign_games for delete to authenticated
   using (club_id = (select public.current_club_id()));
 
 -- Grants: club_id / created_by are never updatable by users.
-revoke all on public.projects, public.games, public.project_games from anon, authenticated;
-grant select, insert, delete on public.projects, public.games, public.project_games to authenticated;
-grant update (title) on public.projects to authenticated;
+revoke all on public.campaigns, public.games, public.campaign_games from anon, authenticated;
+grant select, insert, delete on public.campaigns, public.games, public.campaign_games to authenticated;
+grant update (title) on public.campaigns to authenticated;
 grant update (code, team_name, opponent_name, game_date, kickoff_time, location, score_ours, score_theirs)
   on public.games to authenticated;
