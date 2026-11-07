@@ -74,28 +74,28 @@ On a cloud project, apply the schema and deploy the function: `make link`, `make
 - After `make supabase-start` or `make db-reset`, restart the edge runtime container with `docker restart supabase_edge_runtime_sn-posts`; otherwise `create-user` answers `BOOT_ERROR`.
 - The clubs migration turns the text club IDs of existing accounts into club records (code = name = the old value). That path was only tested on an empty database: check it manually on a populated one before running `make db-push` against a cloud project. Run `select btrim(club_id), count(*) from public.profiles group by 1` on the old schema first to spot variants such as `ABC` / `abc` or tab/space padding, which would become separate clubs.
 
-## Clubs, projects and games
+## Clubs, campaigns and games
 
-Everything belongs to a **club**. A club has **projects** and **games**; a project groups games through the `project_games` link table, and the same game can appear in several projects.
+Everything belongs to a **club**. A club has **campaigns** and **games**; a campaign groups games through the `campaign_games` link table, and the same game can appear in several campaigns.
 
 - **Game**: the **code** is the game's official code, unique within a club (compared trimmed and case-insensitively). The **team name** is the age category. **Location** left empty means the game is at home. The **score** is two optional numbers (ours and theirs, both set or both empty). Games also have an opponent, a date and a kick-off time.
-- **Project**: a title and a list of games. A project may be empty.
-- **Deleting**: deleting a project keeps its games; deleting a game removes it from every project it was in; deleting a user keeps what they created (shown as created by an unknown member).
-- **Who can do what**: every member of a club can create, edit and delete the club's projects and games, and link games to projects. There is no per-user ownership; only creating user accounts is limited to club admins.
-- **Club isolation**: row-level security on `clubs`, `profiles`, `projects`, `games` and `project_games` limits every read and write to the caller's own club, and composite foreign keys stop a link from ever joining records of different clubs. A user of another club sees nothing, including through direct API calls.
+- **Campaign**: a title and a list of games. A campaign may be empty.
+- **Deleting**: deleting a campaign keeps its games; deleting a game removes it from every campaign it was in; deleting a user keeps what they created (shown as created by an unknown member).
+- **Who can do what**: every member of a club can create, edit and delete the club's campaigns and games, and link games to campaigns. There is no per-user ownership; only creating user accounts is limited to club admins.
+- **Club isolation**: row-level security on `clubs`, `profiles`, `campaigns`, `games` and `campaign_games` limits every read and write to the caller's own club, and composite foreign keys stop a link from ever joining records of different clubs. A user of another club sees nothing, including through direct API calls.
 
 **Pages**
 
 | Page            | Description                                                                   |
 | --------------- | ----------------------------------------------------------------------------- |
-| Dashboard       | Recent projects and upcoming games of the club                                |
-| Projects        | List, create, rename and delete projects                                      |
-| Project page    | The games of one project: add a new game, pick an existing one, edit, remove it from the project, or delete it from the club |
-| Games           | All the club's games: edit and delete (games are added from a project page)                                |
+| Dashboard       | Recent campaigns and upcoming games of the club                                |
+| Campaigns        | List, create, rename and delete campaigns                                      |
+| Campaign page    | The games of one campaign: add a new game, pick an existing one, edit, remove it from the campaign, or delete it from the club |
+| Games           | All the club's games: edit and delete (games are added from a campaign page)                                |
 | User edition    | Edit your own name, email and password                                        |
 | User creation   | Club admins only: create a user in your club                                  |
 
-Tests: `make test` runs the Vitest unit tests, `make db-test` runs the pgTAP tests for clubs, projects and games (see the command table above).
+Tests: `make test` runs the Vitest unit tests, `make db-test` runs the pgTAP tests for clubs, campaigns and games (see the command table above).
 
 ## Deploying to Vercel
 
