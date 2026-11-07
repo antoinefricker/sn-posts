@@ -259,7 +259,11 @@ function PickGame({ projectId, projectGameIds, onAdded, onDone, onCancel, busy, 
         <p className="text-muted-foreground">Loading games…</p>
       ) : candidates.length === 0 ? (
         <p className="text-muted-foreground">
-          {query.trim() ? 'No games match your search.' : 'All club games are already in this project.'}
+          {query.trim()
+            ? 'No games match your search.'
+            : games.length === 0
+              ? 'No games in your club yet. Create a new game instead.'
+              : 'All club games are already in this project.'}
         </p>
       ) : (
         <ul className="grid max-h-72 gap-2 overflow-y-auto">
