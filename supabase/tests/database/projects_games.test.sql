@@ -1,6 +1,15 @@
 begin;
 select plan(51);
 
+-- Clean slate: the tests assume an empty database (the first user goes through the public
+-- sign-up path). Everything runs in this transaction, which is rolled back at the end.
+delete from public.project_games;
+delete from public.projects;
+delete from public.games;
+delete from public.user_invites;
+delete from auth.users;
+delete from public.clubs;
+
 -- Club A: first user via the public sign-up path.
 insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data)
 values (
