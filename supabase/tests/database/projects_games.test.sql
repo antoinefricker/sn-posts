@@ -1,5 +1,5 @@
 begin;
-select plan(51);
+select plan(57);
 
 -- Clean slate: the tests assume an empty database (the first user goes through the public
 -- sign-up path). Everything runs in this transaction, which is rolled back at the end.
@@ -196,6 +196,21 @@ select ok(not has_function_privilege('authenticated', 'public.touch_projects_of_
   'authenticated cannot execute touch_projects_of_game');
 select ok(not has_function_privilege('anon', 'public.touch_projects_of_game()', 'execute'),
   'anon cannot execute touch_projects_of_game');
+
+-- Deleting a user keeps what they created (creator becomes unknown) and other members still see it.
+reset role;
+select count(*)::int as games_before from public.games where club_id = :'club_a' \gset
+select count(*)::int as projects_before from public.projects where club_id = :'club_a' \gset
+select lives_ok($$delete from auth.users where id = '$$ || :'m1' || $$'$$, 'deleting a user who created projects and games succeeds');
+select is((select count(*)::int from public.projects where created_by is null and club_id = :'club_a'), :projects_before,
+  'their projects remain with a null creator');
+select is((select count(*)::int from public.games where created_by is null and club_id = :'club_a'), :games_before,
+  'their games remain with a null creator');
+select is((select count(*)::int from public.projects where club_id = :'club_a'), :projects_before, 'no club A project was deleted with the user');
+select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000a1', 'role', 'authenticated')::text, true);
+set local role authenticated;
+select is((select count(*)::int from public.projects), :projects_before, 'another club A member still sees the projects');
+select is((select count(*)::int from public.games), :games_before, 'another club A member still sees the games');
 
 select * from finish();
 rollback;
