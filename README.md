@@ -67,12 +67,12 @@ npm run dev
 
 `make db-reset` rebuilds the local database (and reopens sign-up for a new first admin); `make supabase-stop` shuts the stack down.
 
-On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`.
+On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`. Run `make db-push` (migrations) **before** `make deploy-function`: the function relies on the `user_invites` table.
 
 **Local development notes**
 
 - After `make supabase-start` or `make db-reset`, restart the edge runtime container with `docker restart supabase_edge_runtime_sn-posts`; otherwise `create-user` answers `BOOT_ERROR`.
-- The clubs migration turns the text club IDs of existing accounts into club records (code = name = the old value). That path was only tested on an empty database: check it manually on a populated one before running `make db-push` against a cloud project.
+- The clubs migration turns the text club IDs of existing accounts into club records (code = name = the old value). That path was only tested on an empty database: check it manually on a populated one before running `make db-push` against a cloud project. Run `select btrim(club_id), count(*) from public.profiles group by 1` on the old schema first to spot variants such as `ABC` / `abc` or tab/space padding, which would become separate clubs.
 
 ## Clubs, projects and games
 
@@ -80,7 +80,7 @@ Everything belongs to a **club**. A club has **projects** and **games**; a proje
 
 - **Game**: the **code** is the game's official code, unique within a club (compared trimmed and case-insensitively). The **team name** is the age category. **Location** left empty means the game is at home. The **score** is two optional numbers (ours and theirs, both set or both empty). Games also have an opponent, a date and a kick-off time.
 - **Project**: a title and a list of games. A project may be empty.
-- **Deleting**: deleting a project keeps its games; deleting a game removes it from every project it was in.
+- **Deleting**: deleting a project keeps its games; deleting a game removes it from every project it was in; deleting a user keeps what they created (shown as created by an unknown member).
 - **Who can do what**: every member of a club can create, edit and delete the club's projects and games, and link games to projects. There is no per-user ownership; only creating user accounts is limited to club admins.
 - **Club isolation**: row-level security on `clubs`, `profiles`, `projects`, `games` and `project_games` limits every read and write to the caller's own club, and composite foreign keys stop a link from ever joining records of different clubs. A user of another club sees nothing, including through direct API calls.
 
@@ -91,7 +91,7 @@ Everything belongs to a **club**. A club has **projects** and **games**; a proje
 | Dashboard       | Recent projects and upcoming games of the club                                |
 | Projects        | List, create, rename and delete projects                                      |
 | Project page    | The games of one project: add a new game, pick an existing one, edit, remove it from the project, or delete it from the club |
-| Games           | All the club's games: create, edit and delete                                 |
+| Games           | All the club's games: edit and delete (games are added from a project page)                                |
 | User edition    | Edit your own name, email and password                                        |
 | User creation   | Club admins only: create a user in your club                                  |
 
