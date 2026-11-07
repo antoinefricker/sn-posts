@@ -24,6 +24,8 @@ export type AuthValue = {
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (input: SignUpInput) => Promise<string | null>
   signOut: () => Promise<void>
+  /** Fetch the profile again (e.g. after a network error); shows the loading state meanwhile. */
+  reloadProfile: () => void
   /** Edit the signed-in user's own name. The club cannot be changed. */
   updateProfile: (input: { name: string }) => Promise<string | null>
   /**

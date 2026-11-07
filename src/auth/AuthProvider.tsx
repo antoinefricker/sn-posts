@@ -11,6 +11,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile: Profile | null
   } | null>(null)
   const [sessionReady, setSessionReady] = useState(false)
+  const [reloadCount, setReloadCount] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, reloadCount])
 
   // Loading until the session is known and, when signed in, until that user's profile
   // fetch has settled; a profile fetched for another user is never exposed.
@@ -71,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { data: { name, club_code: clubCode, club_name: clubName } },
       })
       return error?.message ?? null
+    },
+    reloadProfile() {
+      setProfileState(null)
+      setReloadCount((count) => count + 1)
     },
     async signOut() {
       await supabase.auth.signOut()

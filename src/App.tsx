@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { AuthForm } from './auth/AuthForm'
 import { useAuth } from './auth/AuthContext'
+import { Button } from './components/ui/button'
 import { AdminRoute } from './layout/AdminRoute'
 import { AppLayout } from './layout/AppLayout'
 import { AccountPage } from './pages/AccountPage'
@@ -11,7 +12,7 @@ import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 
 function App() {
-  const { session, loading } = useAuth()
+  const { session, profile, loading, reloadProfile, signOut } = useAuth()
 
   if (loading) {
     return (
@@ -21,6 +22,22 @@ function App() {
     )
   }
   if (!session) return <AuthForm />
+  if (!profile) {
+    return (
+      <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-4 text-center">
+        <h1 className="text-xl font-semibold">Your account is not available</h1>
+        <p className="max-w-sm text-muted-foreground">
+          We could not load your profile. Check your connection and try again, or sign out.
+        </p>
+        <div className="flex gap-2">
+          <Button onClick={reloadProfile}>Try again</Button>
+          <Button variant="outline" onClick={() => void signOut()}>
+            Sign out
+          </Button>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <Routes>
