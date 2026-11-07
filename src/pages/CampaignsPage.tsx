@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ProjectForm } from '@/components/ProjectForm'
+import { CampaignForm } from '@/components/CampaignForm'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { createProject, deleteProject, listProjects, updateProject } from '@/data/projects'
+import { createCampaign, deleteCampaign, listCampaigns, updateCampaign } from '@/data/campaigns'
 import { toMessage } from '@/data/errors'
-import { deleteProjectDescription } from '@/lib/projects'
-import type { Project } from '@/data/types'
+import { deleteCampaignDescription } from '@/lib/campaigns'
+import type { Campaign } from '@/data/types'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
@@ -19,17 +19,17 @@ function gamesLabel(count: number): string {
   return `${count} ${count === 1 ? 'game' : 'games'}`
 }
 
-export function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[] | null>(null)
+export function CampaignsPage() {
+  const [campaigns, setCampaigns] = useState<Campaign[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [deleting, setDeleting] = useState<Project | null>(null)
-  const [editing, setEditing] = useState<Project | undefined>(undefined)
+  const [deleting, setDeleting] = useState<Campaign | null>(null)
+  const [editing, setEditing] = useState<Campaign | undefined>(undefined)
 
   const load = useCallback(async () => {
     setError(null)
     try {
-      setProjects(await listProjects())
+      setCampaigns(await listCampaigns())
     } catch (e) {
       setError(toMessage(e))
     }
@@ -44,21 +44,21 @@ export function ProjectsPage() {
     setFormOpen(true)
   }
 
-  function openEdit(project: Project) {
-    setEditing(project)
+  function openEdit(campaign: Campaign) {
+    setEditing(campaign)
     setFormOpen(true)
   }
 
   async function handleSubmit(title: string) {
-    if (editing) await updateProject(editing.id, title)
-    else await createProject(title)
+    if (editing) await updateCampaign(editing.id, title)
+    else await createCampaign(title)
     setFormOpen(false)
     await load()
   }
 
   async function handleDelete() {
     if (!deleting) return
-    await deleteProject(deleting.id)
+    await deleteCampaign(deleting.id)
     setDeleting(null)
     await load()
   }
@@ -66,8 +66,8 @@ export function ProjectsPage() {
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">Projects</h1>
-        <Button onClick={openCreate}>New project</Button>
+        <h1 className="text-2xl font-semibold">Campaigns</h1>
+        <Button onClick={openCreate}>New campaign</Button>
       </div>
       {error ? (
         <div role="alert" className="grid justify-items-start gap-2">
@@ -76,33 +76,33 @@ export function ProjectsPage() {
             Retry
           </Button>
         </div>
-      ) : projects === null ? (
+      ) : campaigns === null ? (
         <p className="text-muted-foreground">Loading…</p>
-      ) : projects.length === 0 ? (
-        <p className="text-muted-foreground">No projects yet. Create the first one.</p>
+      ) : campaigns.length === 0 ? (
+        <p className="text-muted-foreground">No campaigns yet. Create the first one.</p>
       ) : (
         <ul className="grid gap-3">
-          {projects.map((project) => (
-            <li key={project.id}>
+          {campaigns.map((campaign) => (
+            <li key={campaign.id}>
               <Card>
                 <CardContent className="flex items-center justify-between gap-2">
                   <div className="grid gap-1">
                     <Link
-                      to={`/projects/${project.id}`}
+                      to={`/campaigns/${campaign.id}`}
                       className="font-medium underline-offset-4 hover:underline"
                     >
-                      {project.title}
+                      {campaign.title}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {project.creator_name ?? 'Unknown member'} · Created {formatDate(project.created_at)}{' '}
-                      · Updated {formatDate(project.updated_at)} · {gamesLabel(project.game_count)}
+                      {campaign.creator_name ?? 'Unknown member'} · Created {formatDate(campaign.created_at)}{' '}
+                      · Updated {formatDate(campaign.updated_at)} · {gamesLabel(campaign.game_count)}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(project)}>
+                    <Button variant="outline" size="sm" onClick={() => openEdit(campaign)}>
                       Edit
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeleting(project)}>
+                    <Button variant="outline" size="sm" onClick={() => setDeleting(campaign)}>
                       Delete
                     </Button>
                   </div>
@@ -112,7 +112,7 @@ export function ProjectsPage() {
           ))}
         </ul>
       )}
-      <ProjectForm
+      <CampaignForm
         open={formOpen}
         onOpenChange={setFormOpen}
         initial={editing}
@@ -124,8 +124,8 @@ export function ProjectsPage() {
           if (!open) setDeleting(null)
         }}
         title={`Delete "${deleting?.title ?? ''}"?`}
-        description={deleteProjectDescription(deleting?.game_count ?? 0)}
-        confirmLabel="Delete project"
+        description={deleteCampaignDescription(deleting?.game_count ?? 0)}
+        confirmLabel="Delete campaign"
         onConfirm={handleDelete}
       />
     </div>

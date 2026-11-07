@@ -5,20 +5,20 @@ import { GameRow } from '@/components/GameRow'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { listGames } from '@/data/games'
-import type { GameWithProjects } from '@/data/types'
+import type { GameWithCampaigns } from '@/data/types'
 
-function ProjectLinks({ projects }: { projects: GameWithProjects['projects'] }) {
-  if (projects.length === 0) {
-    return <p className="px-1 text-sm text-muted-foreground">Not used in any project</p>
+function CampaignLinks({ campaigns }: { campaigns: GameWithCampaigns['campaigns'] }) {
+  if (campaigns.length === 0) {
+    return <p className="px-1 text-sm text-muted-foreground">Not used in any campaign</p>
   }
   return (
     <p className="px-1 text-sm text-muted-foreground">
       In:{' '}
-      {projects.map((project, i) => (
-        <span key={project.id}>
+      {campaigns.map((campaign, i) => (
+        <span key={campaign.id}>
           {i > 0 && ', '}
-          <Link to={`/projects/${project.id}`} className="underline underline-offset-4">
-            {project.title}
+          <Link to={`/campaigns/${campaign.id}`} className="underline underline-offset-4">
+            {campaign.title}
           </Link>
         </span>
       ))}
@@ -27,7 +27,7 @@ function ProjectLinks({ projects }: { projects: GameWithProjects['projects'] }) 
 }
 
 export function GamesPage() {
-  const [games, setGames] = useState<GameWithProjects[] | null>(null)
+  const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
@@ -62,14 +62,14 @@ export function GamesPage() {
       ) : games.length === 0 ? (
         <div className="grid gap-1">
           <p className="font-medium">No games yet</p>
-          <p className="text-sm text-muted-foreground">Games are added from a project page.</p>
+          <p className="text-sm text-muted-foreground">Games are added from a campaign page.</p>
         </div>
       ) : (
         <ul className="grid gap-3">
           {games.map((game) => (
             <li key={game.id} className="grid gap-1">
               <GameRow game={game} actions={<GameActions game={game} onChanged={load} />} />
-              <ProjectLinks projects={game.projects} />
+              <CampaignLinks campaigns={game.campaigns} />
             </li>
           ))}
         </ul>

@@ -3,23 +3,23 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { GameForm } from '@/components/GameForm'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { deleteGame, removeGameFromProject, updateGame } from '@/data/games'
-import type { GameInput, GameWithProjects } from '@/data/types'
+import { deleteGame, removeGameFromCampaign, updateGame } from '@/data/games'
+import type { GameInput, GameWithCampaigns } from '@/data/types'
 import { deleteGameDescription } from '@/lib/games'
 
 type GameActionsProps = {
-  game: GameWithProjects
-  /** When set, the row offers "Remove from project" for this project. */
-  projectId?: string
+  game: GameWithCampaigns
+  /** When set, the row offers "Remove from campaign" for this campaign. */
+  campaignId?: string
   /** Refreshes the caller's list; called after every successful change and expected not to throw. */
   onChanged: () => Promise<void> | void
 }
 
 /**
- * Edit, delete and (on a project page) remove-from-project for one game row. The game is a prop of
+ * Edit, delete and (on a campaign page) remove-from-campaign for one game row. The game is a prop of
  * the row, so the dialogs keep their content while they animate closed.
  */
-export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
+export function GameActions({ game, campaignId, onChanged }: GameActionsProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [removeOpen, setRemoveOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -38,8 +38,8 @@ export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
   }
 
   async function handleRemove() {
-    if (!projectId) return
-    await removeGameFromProject(projectId, game.id)
+    if (!campaignId) return
+    await removeGameFromCampaign(campaignId, game.id)
     setRemoveOpen(false)
     await onChanged()
   }
@@ -55,9 +55,9 @@ export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
       <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
         Edit
       </Button>
-      {projectId && (
+      {campaignId && (
         <Button variant="outline" size="sm" onClick={() => setRemoveOpen(true)}>
-          Remove from project
+          Remove from campaign
         </Button>
       )}
       <Button variant="outline" size="sm" onClick={() => setDeleteOpen(true)}>
@@ -72,7 +72,7 @@ export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
           {editOpen && (
             <GameForm
               initial={game}
-              usedInProjects={game.projects.length}
+              usedInCampaigns={game.campaigns.length}
               onSubmit={handleEdit}
               onBusyChange={setSaving}
               onCancel={() => handleEditOpenChange(false)}
@@ -80,13 +80,13 @@ export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
           )}
         </DialogContent>
       </Dialog>
-      {projectId && (
+      {campaignId && (
         <ConfirmDialog
           open={removeOpen}
           onOpenChange={setRemoveOpen}
-          title={`Remove ${game.code} from this project?`}
-          description="Only the link is removed. The game stays in the club and in its other projects."
-          confirmLabel="Remove from project"
+          title={`Remove ${game.code} from this campaign?`}
+          description="Only the link is removed. The game stays in the club and in its other campaigns."
+          confirmLabel="Remove from campaign"
           onConfirm={handleRemove}
         />
       )}
@@ -94,7 +94,7 @@ export function GameActions({ game, projectId, onChanged }: GameActionsProps) {
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title={`Delete ${game.code}?`}
-        description={deleteGameDescription(game.projects.length)}
+        description={deleteGameDescription(game.campaigns.length)}
         confirmLabel="Delete game"
         onConfirm={handleDelete}
       />

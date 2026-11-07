@@ -5,22 +5,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toMessage } from '@/data/errors'
-import { addGameToProject, createGame, findGameByCode, listGames } from '@/data/games'
-import type { Game, GameInput, GameWithProjects } from '@/data/types'
+import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
+import type { Game, GameInput, GameWithCampaigns } from '@/data/types'
 import { formatGameWhen } from '@/components/GameRow'
 
 type AddGameDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  projectId: string
-  /** Ids of the games already in the project; those cannot be added again. */
-  projectGameIds: string[]
+  campaignId: string
+  /** Ids of the games already in the campaign; those cannot be added again. */
+  campaignGameIds: string[]
   /** Called after a game was linked, before the dialog closes. */
   onAdded: () => Promise<void> | void
 }
 
-/** Adds a game to a project. Closing is ignored while a save is running. */
-export function AddGameDialog({ open, onOpenChange, projectId, projectGameIds, onAdded }: AddGameDialogProps) {
+/** Adds a game to a campaign. Closing is ignored while a save is running. */
+export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds, onAdded }: AddGameDialogProps) {
   const [busy, setBusy] = useState(false)
 
   function handleOpenChange(next: boolean) {
@@ -37,8 +37,8 @@ export function AddGameDialog({ open, onOpenChange, projectId, projectGameIds, o
         {/* Mounted only while open so state resets. */}
         {open && (
           <AddGameBody
-            projectId={projectId}
-            projectGameIds={projectGameIds}
+            campaignId={campaignId}
+            campaignGameIds={campaignGameIds}
             onAdded={onAdded}
             onDone={() => onOpenChange(false)}
             onCancel={() => handleOpenChange(false)}
@@ -52,8 +52,8 @@ export function AddGameDialog({ open, onOpenChange, projectId, projectGameIds, o
 }
 
 type BodyProps = {
-  projectId: string
-  projectGameIds: string[]
+  campaignId: string
+  campaignGameIds: string[]
   onAdded: () => Promise<void> | void
   onDone: () => void
   onCancel: () => void
@@ -99,8 +99,8 @@ function isDuplicateCodeError(e: unknown): boolean {
 }
 
 function CreateGame({
-  projectId,
-  projectGameIds,
+  campaignId,
+  campaignGameIds,
   onAdded,
   onDone,
   onCancel,
@@ -129,7 +129,7 @@ function CreateGame({
       setDuplicate(raced)
       return
     }
-    await addGameToProject(projectId, game.id)
+    await addGameToCampaign(campaignId, game.id)
     onDone()
     await onAdded()
   }
@@ -139,7 +139,7 @@ function CreateGame({
     setLinking(true)
     setBusy(true)
     try {
-      await addGameToProject(projectId, game.id)
+      await addGameToCampaign(campaignId, game.id)
       onDone()
       await onAdded()
     } catch (e) {
@@ -150,7 +150,7 @@ function CreateGame({
     }
   }
 
-  const alreadyInProject = duplicate !== null && projectGameIds.includes(duplicate.id)
+  const alreadyInCampaign = duplicate !== null && campaignGameIds.includes(duplicate.id)
 
   return (
     <div className="grid gap-4">
@@ -160,8 +160,8 @@ function CreateGame({
             A game with code <strong>{duplicate.code}</strong> already exists in your club:{' '}
             {duplicate.team_name} vs {duplicate.opponent_name}, {formatGameWhen(duplicate)}.
           </p>
-          {alreadyInProject ? (
-            <p className="text-muted-foreground">It is already in this project.</p>
+          {alreadyInCampaign ? (
+            <p className="text-muted-foreground">It is already in this campaign.</p>
           ) : (
             <div>
               <Button type="button" disabled={linking} onClick={() => void linkExisting(duplicate)}>
@@ -179,8 +179,8 @@ function CreateGame({
   )
 }
 
-function PickGame({ projectId, projectGameIds, onAdded, onDone, onCancel, busy, setBusy }: BodyProps) {
-  const [games, setGames] = useState<GameWithProjects[] | null>(null)
+function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy, setBusy }: BodyProps) {
+  const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
   const [query, setQuery] = useState('')
@@ -206,7 +206,7 @@ function PickGame({ projectId, projectGameIds, onAdded, onDone, onCancel, busy, 
   const candidates = useMemo(() => {
     const wanted = query.trim().toLowerCase()
     return (games ?? [])
-      .filter((g) => !projectGameIds.includes(g.id))
+      .filter((g) => !campaignGameIds.includes(g.id))
       .filter(
         (g) =>
           !wanted ||
@@ -214,14 +214,14 @@ function PickGame({ projectId, projectGameIds, onAdded, onDone, onCancel, busy, 
             v.toLowerCase().includes(wanted),
           ),
       )
-  }, [games, projectGameIds, query])
+  }, [games, campaignGameIds, query])
 
   async function link(game: Game) {
     setLinkError(null)
     setLinkingId(game.id)
     setBusy(true)
     try {
-      await addGameToProject(projectId, game.id)
+      await addGameToCampaign(campaignId, game.id)
       onDone()
       await onAdded()
     } catch (e) {
@@ -263,7 +263,7 @@ function PickGame({ projectId, projectGameIds, onAdded, onDone, onCancel, busy, 
             ? 'No games match your search.'
             : games.length === 0
               ? 'No games in your club yet. Create a new game instead.'
-              : 'All club games are already in this project.'}
+              : 'All club games are already in this campaign.'}
         </p>
       ) : (
         <ul className="grid max-h-72 gap-2 overflow-y-auto">

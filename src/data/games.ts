@@ -1,28 +1,28 @@
 import { supabase } from '@/supabase'
 import { normalizeGameCode } from '@/lib/games'
-import type { Game, GameInput, GameWithProjects } from './types'
+import type { Game, GameInput, GameWithCampaigns } from './types'
 
 type GameRow = Omit<Game, 'creator_name'> & {
   creator: { name: string | null } | null
 }
-type GameRowWithProjects = GameRow & {
-  project_games: { projects: { id: string; title: string } | null }[]
-  /** Only present on listProjectGames (inner-join filter); dropped on mapping. */
+type GameRowWithCampaigns = GameRow & {
+  campaign_games: { campaigns: { id: string; title: string } | null }[]
+  /** Only present on listCampaignGames (inner-join filter); dropped on mapping. */
   link?: unknown
 }
 
 const GAME_COLUMNS =
   'id, created_by, code, team_name, opponent_name, game_date, kickoff_time, location, score_ours, score_theirs, created_at, updated_at, creator:profiles!created_by(name)'
-const GAME_WITH_PROJECTS = `${GAME_COLUMNS}, project_games(projects(id, title))`
+const GAME_WITH_CAMPAIGNS = `${GAME_COLUMNS}, campaign_games(campaigns(id, title))`
 
 function toGame({ creator, ...row }: GameRow): Game {
   return { ...row, creator_name: creator?.name ?? null }
 }
 
-function toGameWithProjects({ project_games, link: _link, ...row }: GameRowWithProjects): GameWithProjects {
+function toGameWithCampaigns({ campaign_games, link: _link, ...row }: GameRowWithCampaigns): GameWithCampaigns {
   return {
     ...toGame(row),
-    projects: project_games.flatMap((link) => (link.projects ? [link.projects] : [])),
+    campaigns: campaign_games.flatMap((link) => (link.campaigns ? [link.campaigns] : [])),
   }
 }
 
@@ -40,27 +40,27 @@ function toPayload(input: GameInput): GameInput {
   }
 }
 
-export async function listGames(): Promise<GameWithProjects[]> {
+export async function listGames(): Promise<GameWithCampaigns[]> {
   const { data, error } = await supabase
     .from('games')
-    .select(GAME_WITH_PROJECTS)
+    .select(GAME_WITH_CAMPAIGNS)
     .order('game_date', { ascending: false })
     .order('kickoff_time', { ascending: false })
-    .overrideTypes<GameRowWithProjects[], { merge: false }>()
+    .overrideTypes<GameRowWithCampaigns[], { merge: false }>()
   if (error) throw error
-  return data.map(toGameWithProjects)
+  return data.map(toGameWithCampaigns)
 }
 
-export async function listProjectGames(projectId: string): Promise<GameWithProjects[]> {
+export async function listCampaignGames(campaignId: string): Promise<GameWithCampaigns[]> {
   const { data, error } = await supabase
     .from('games')
-    .select(`${GAME_WITH_PROJECTS}, link:project_games!inner(project_id)`)
-    .eq('link.project_id', projectId)
+    .select(`${GAME_WITH_CAMPAIGNS}, link:campaign_games!inner(campaign_id)`)
+    .eq('link.campaign_id', campaignId)
     .order('game_date', { ascending: false })
     .order('kickoff_time', { ascending: false })
-    .overrideTypes<GameRowWithProjects[], { merge: false }>()
+    .overrideTypes<GameRowWithCampaigns[], { merge: false }>()
   if (error) throw error
-  return data.map(toGameWithProjects)
+  return data.map(toGameWithCampaigns)
 }
 
 /** Case-insensitive lookup after trimming; null when no game has this code. */
@@ -104,18 +104,18 @@ export async function deleteGame(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function addGameToProject(projectId: string, gameId: string): Promise<void> {
+export async function addGameToCampaign(campaignId: string, gameId: string): Promise<void> {
   const { error } = await supabase
-    .from('project_games')
-    .insert({ project_id: projectId, game_id: gameId })
+    .from('campaign_games')
+    .insert({ campaign_id: campaignId, game_id: gameId })
   if (error) throw error
 }
 
-export async function removeGameFromProject(projectId: string, gameId: string): Promise<void> {
+export async function removeGameFromCampaign(campaignId: string, gameId: string): Promise<void> {
   const { error } = await supabase
-    .from('project_games')
+    .from('campaign_games')
     .delete()
-    .eq('project_id', projectId)
+    .eq('campaign_id', campaignId)
     .eq('game_id', gameId)
   if (error) throw error
 }

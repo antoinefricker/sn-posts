@@ -9,7 +9,7 @@ import { normalizeGameCode } from '@/lib/games'
 
 type GameFormProps = {
   initial?: Game
-  usedInProjects?: number
+  usedInCampaigns?: number
   onSubmit: (input: GameInput) => Promise<void>
   /** Notified when a save starts and ends, so a wrapping dialog can ignore close requests meanwhile. */
   onBusyChange?: (busy: boolean) => void
@@ -33,7 +33,7 @@ function parseScore(value: string): number | null {
   return Number.isInteger(n) && n >= 0 ? n : Number.NaN
 }
 
-export function GameForm({ initial, usedInProjects = 0, onSubmit, onBusyChange, onCancel }: GameFormProps) {
+export function GameForm({ initial, usedInCampaigns = 0, onSubmit, onBusyChange, onCancel }: GameFormProps) {
   const [code, setCode] = useState(initial?.code ?? '')
   const [teamName, setTeamName] = useState(initial?.team_name ?? '')
   const [opponent, setOpponent] = useState(initial?.opponent_name ?? '')
@@ -93,9 +93,9 @@ export function GameForm({ initial, usedInProjects = 0, onSubmit, onBusyChange, 
 
   return (
     <form onSubmit={handleSubmit} noValidate className="grid gap-4">
-      {usedInProjects > 0 && (
+      {usedInCampaigns > 0 && (
         <p className="text-sm text-muted-foreground">
-          Used in {usedInProjects} {usedInProjects === 1 ? 'project' : 'projects'} — changes apply everywhere
+          Used in {usedInCampaigns} {usedInCampaigns === 1 ? 'campaign' : 'campaigns'} — changes apply everywhere
         </p>
       )}
       <fieldset disabled={busy} className="grid min-w-0 gap-4 border-0 p-0">

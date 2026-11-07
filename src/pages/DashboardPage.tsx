@@ -1,5 +1,5 @@
 import { useAuth } from '@/auth/AuthContext'
-import { RecentProjectsCard } from '@/components/dashboard/RecentProjectsCard'
+import { RecentCampaignsCard } from '@/components/dashboard/RecentCampaignsCard'
 import { UpcomingGamesCard } from '@/components/dashboard/UpcomingGamesCard'
 
 export function DashboardPage() {
@@ -16,7 +16,7 @@ export function DashboardPage() {
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <RecentProjectsCard />
+        <RecentCampaignsCard />
         <UpcomingGamesCard />
       </div>
     </div>

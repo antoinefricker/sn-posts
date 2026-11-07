@@ -43,7 +43,7 @@ export function AppLayout() {
     <nav aria-label={label} className="flex flex-col gap-1">
       <NavItem to="/" end icon={<LayoutDashboard />} onNavigate={close}>Dashboard</NavItem>
       <Separator className="my-2" />
-      <NavItem to="/projects" icon={<FolderKanban />} onNavigate={close}>Projects</NavItem>
+      <NavItem to="/campaigns" icon={<FolderKanban />} onNavigate={close}>Campaigns</NavItem>
       <NavItem to="/games" icon={<Gamepad2 />} onNavigate={close}>Games</NavItem>
       <Separator className="my-2" />
       <NavItem to="/account" icon={<UserCog />} onNavigate={close}>User edition</NavItem>

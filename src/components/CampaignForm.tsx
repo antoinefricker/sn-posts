@@ -10,17 +10,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toMessage } from '@/data/errors'
-import type { Project } from '@/data/types'
+import type { Campaign } from '@/data/types'
 
-type ProjectFormProps = {
+type CampaignFormProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  initial?: Project
+  initial?: Campaign
   onSubmit: (title: string) => Promise<void>
 }
 
 /** Create/edit dialog. Closing is the caller's job after a successful onSubmit. */
-export function ProjectForm({ open, onOpenChange, initial, onSubmit }: ProjectFormProps) {
+export function CampaignForm({ open, onOpenChange, initial, onSubmit }: CampaignFormProps) {
   const [busy, setBusy] = useState(false)
 
   // Esc, backdrop and the close button are swallowed while a save is running.
@@ -33,11 +33,11 @@ export function ProjectForm({ open, onOpenChange, initial, onSubmit }: ProjectFo
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{initial ? 'Edit project' : 'New project'}</DialogTitle>
+          <DialogTitle>{initial ? 'Edit campaign' : 'New campaign'}</DialogTitle>
         </DialogHeader>
         {/* Remounted per open so state resets. */}
         {open && (
-          <ProjectFormBody
+          <CampaignFormBody
             key={initial?.id ?? 'new'}
             initial={initial}
             onSubmit={onSubmit}
@@ -51,14 +51,14 @@ export function ProjectForm({ open, onOpenChange, initial, onSubmit }: ProjectFo
   )
 }
 
-function ProjectFormBody({
+function CampaignFormBody({
   initial,
   onSubmit,
   onCancel,
   busy,
   setBusy,
 }: {
-  initial?: Project
+  initial?: Campaign
   onSubmit: (title: string) => Promise<void>
   onCancel: () => void
   busy: boolean
@@ -90,7 +90,7 @@ function ProjectFormBody({
     <form onSubmit={handleSubmit} noValidate className="grid gap-4">
       <FormField
         label="Title"
-        name="project_title"
+        name="campaign_title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required

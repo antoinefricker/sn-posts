@@ -1,4 +1,4 @@
-export type Project = {
+export type Campaign = {
   id: string
   title: string
   created_at: string
@@ -27,6 +27,6 @@ export type Game = GameInput & {
   updated_at: string
 }
 
-export type GameWithProjects = Game & {
-  projects: { id: string; title: string }[]
+export type GameWithCampaigns = Game & {
+  campaigns: { id: string; title: string }[]
 }

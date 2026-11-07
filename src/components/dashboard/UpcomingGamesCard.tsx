@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toMessage } from '@/data/errors'
 import { listGames } from '@/data/games'
-import type { GameWithProjects } from '@/data/types'
+import type { GameWithCampaigns } from '@/data/types'
 import { isHomeGame } from '@/lib/games'
 import { upcomingGames } from '@/lib/upcoming'
 
 const UPCOMING_LIMIT = 5
 
 export function UpcomingGamesCard() {
-  const [games, setGames] = useState<GameWithProjects[] | null>(null)
+  const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Bumped by Retry to run the load effect again.
   const [attempt, setAttempt] = useState(0)
@@ -72,19 +72,19 @@ export function UpcomingGamesCard() {
                   <p className="text-sm text-muted-foreground">
                     {formatGameWhen(game)} · {isHomeGame(game) ? 'Home' : game.location}
                   </p>
-                  {game.projects.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Not used in any project</p>
+                  {game.campaigns.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Not used in any campaign</p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       In:{' '}
-                      {game.projects.map((project, i) => (
-                        <span key={project.id}>
+                      {game.campaigns.map((campaign, i) => (
+                        <span key={campaign.id}>
                           {i > 0 && ', '}
                           <Link
-                            to={`/projects/${project.id}`}
+                            to={`/campaigns/${campaign.id}`}
                             className="underline underline-offset-4"
                           >
-                            {project.title}
+                            {campaign.title}
                           </Link>
                         </span>
                       ))}

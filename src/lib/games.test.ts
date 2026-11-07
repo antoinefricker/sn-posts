@@ -31,15 +31,15 @@ describe('normalizeGameCode', () => {
 })
 
 describe('deleteGameDescription', () => {
-  it('leads with the club-level effect and words 0, 1 and many projects', () => {
+  it('leads with the club-level effect and words 0, 1 and many campaigns', () => {
     expect(deleteGameDescription(0)).toBe(
-      'Deletes the game from the club for good. It is not used in any project. This cannot be undone.',
+      'Deletes the game from the club for good. It is not used in any campaign. This cannot be undone.',
     )
     expect(deleteGameDescription(1)).toBe(
-      'Deletes the game from the club for good. It is used in 1 project and will be removed from it. This cannot be undone.',
+      'Deletes the game from the club for good. It is used in 1 campaign and will be removed from it. This cannot be undone.',
     )
     expect(deleteGameDescription(3)).toBe(
-      'Deletes the game from the club for good. It is used in 3 projects and will be removed from all of them. This cannot be undone.',
+      'Deletes the game from the club for good. It is used in 3 campaigns and will be removed from all of them. This cannot be undone.',
     )
   })
 })

@@ -1,53 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { ProjectForm } from '@/components/ProjectForm'
+import { CampaignForm } from '@/components/CampaignForm'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { AddGameDialog } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GameRow } from '@/components/GameRow'
-import { listProjectGames } from '@/data/games'
-import { deleteProject, getProject, updateProject } from '@/data/projects'
-import type { GameWithProjects, Project } from '@/data/types'
-import { deleteProjectDescription } from '@/lib/projects'
+import { listCampaignGames } from '@/data/games'
+import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
+import type { GameWithCampaigns, Campaign } from '@/data/types'
+import { deleteCampaignDescription } from '@/lib/campaigns'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
-type ProjectState =
+type CampaignState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'not-found' }
-  | { status: 'ready'; project: Project }
+  | { status: 'ready'; campaign: Campaign }
 
-/** Keyed by id so navigating between projects starts from a fresh loading state. */
-export function ProjectDetailPage() {
-  const { projectId = '' } = useParams()
-  return <ProjectDetail key={projectId} projectId={projectId} />
+/** Keyed by id so navigating between campaigns starts from a fresh loading state. */
+export function CampaignDetailPage() {
+  const { campaignId = '' } = useParams()
+  return <CampaignDetail key={campaignId} campaignId={campaignId} />
 }
 
-function ProjectDetail({ projectId }: { projectId: string }) {
+function CampaignDetail({ campaignId }: { campaignId: string }) {
   const navigate = useNavigate()
-  const [state, setState] = useState<ProjectState>({ status: 'loading' })
+  const [state, setState] = useState<CampaignState>({ status: 'loading' })
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
-  const loadProject = useCallback(async () => {
+  const loadCampaign = useCallback(async () => {
     const id = ++requestId.current
     try {
-      const project = await getProject(projectId)
+      const campaign = await getCampaign(campaignId)
       if (id !== requestId.current) return
-      setState(project ? { status: 'ready', project } : { status: 'not-found' })
+      setState(campaign ? { status: 'ready', campaign } : { status: 'not-found' })
     } catch (e) {
       if (id !== requestId.current) return
       setState({ status: 'error', message: toMessage(e) })
     }
-  }, [projectId])
+  }, [campaignId])
 
-  const [games, setGames] = useState<GameWithProjects[] | null>(null)
+  const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
   const [gamesError, setGamesError] = useState<string | null>(null)
   const gamesRequestId = useRef(0)
 
@@ -55,29 +55,29 @@ function ProjectDetail({ projectId }: { projectId: string }) {
     const id = ++gamesRequestId.current
     setGamesError(null)
     try {
-      const list = await listProjectGames(projectId)
+      const list = await listCampaignGames(campaignId)
       if (id === gamesRequestId.current) setGames(list)
     } catch (e) {
       if (id === gamesRequestId.current) setGamesError(toMessage(e))
     }
-  }, [projectId])
+  }, [campaignId])
 
   useEffect(() => {
-    void loadProject()
+    void loadCampaign()
     void loadGames()
-  }, [loadProject, loadGames])
+  }, [loadCampaign, loadGames])
 
-  /** Reload after any change; linking games also bumps the project's updated_at. */
+  /** Reload after any change; linking games also bumps the campaign's updated_at. */
   const refresh = useCallback(async () => {
-    await Promise.all([loadProject(), loadGames()])
-  }, [loadProject, loadGames])
+    await Promise.all([loadCampaign(), loadGames()])
+  }, [loadCampaign, loadGames])
 
   if (state.status === 'loading') return <p className="text-muted-foreground">Loading…</p>
   if (state.status === 'error') {
     return (
       <div role="alert" className="grid justify-items-start gap-2">
         <p className="text-sm text-destructive">{state.message}</p>
-        <Button variant="outline" onClick={() => void loadProject()}>
+        <Button variant="outline" onClick={() => void loadCampaign()}>
           Retry
         </Button>
       </div>
@@ -86,40 +86,40 @@ function ProjectDetail({ projectId }: { projectId: string }) {
   if (state.status === 'not-found') {
     return (
       <div className="grid justify-items-start gap-2">
-        <h1 className="text-2xl font-semibold">Project not found</h1>
+        <h1 className="text-2xl font-semibold">Campaign not found</h1>
         <p className="text-muted-foreground">It may have been deleted.</p>
-        <Link to="/projects" className="underline underline-offset-4">
-          Back to projects
+        <Link to="/campaigns" className="underline underline-offset-4">
+          Back to campaigns
         </Link>
       </div>
     )
   }
 
-  const { project } = state
+  const { campaign } = state
 
   async function handleEdit(title: string) {
-    await updateProject(project.id, title)
+    await updateCampaign(campaign.id, title)
     setEditOpen(false)
     await refresh()
   }
 
   async function handleDelete() {
-    await deleteProject(project.id)
+    await deleteCampaign(campaign.id)
     setDeleteOpen(false)
-    navigate('/projects')
+    navigate('/campaigns')
   }
 
   return (
     <div className="grid gap-4">
-      <Link to="/projects" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-        Projects
+      <Link to="/campaigns" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+        Campaigns
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold">{project.title}</h1>
+          <h1 className="text-2xl font-semibold">{campaign.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {project.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(project.created_at))}{' '}
-            · Updated {dateFormat.format(new Date(project.updated_at))}
+            {campaign.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(campaign.created_at))}{' '}
+            · Updated {dateFormat.format(new Date(campaign.updated_at))}
           </p>
         </div>
         <div className="flex gap-2">
@@ -148,14 +148,14 @@ function ProjectDetail({ projectId }: { projectId: string }) {
         ) : games === null ? (
           <p className="text-muted-foreground">Loading games…</p>
         ) : games.length === 0 ? (
-          <p className="text-muted-foreground">No games in this project yet.</p>
+          <p className="text-muted-foreground">No games in this campaign yet.</p>
         ) : (
           <ul className="grid gap-3">
             {games.map((game) => (
               <li key={game.id}>
                 <GameRow
                   game={game}
-                  actions={<GameActions game={game} projectId={project.id} onChanged={refresh} />}
+                  actions={<GameActions game={game} campaignId={campaign.id} onChanged={refresh} />}
                 />
               </li>
             ))}
@@ -165,17 +165,17 @@ function ProjectDetail({ projectId }: { projectId: string }) {
       <AddGameDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        projectId={project.id}
-        projectGameIds={games?.map((g) => g.id) ?? []}
+        campaignId={campaign.id}
+        campaignGameIds={games?.map((g) => g.id) ?? []}
         onAdded={refresh}
       />
-      <ProjectForm open={editOpen} onOpenChange={setEditOpen} initial={project} onSubmit={handleEdit} />
+      <CampaignForm open={editOpen} onOpenChange={setEditOpen} initial={campaign} onSubmit={handleEdit} />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title={`Delete "${project.title}"?`}
-        description={deleteProjectDescription(games?.length ?? project.game_count)}
-        confirmLabel="Delete project"
+        title={`Delete "${campaign.title}"?`}
+        description={deleteCampaignDescription(games?.length ?? campaign.game_count)}
+        confirmLabel="Delete campaign"
         onConfirm={handleDelete}
       />
     </div>

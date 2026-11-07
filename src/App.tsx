@@ -8,8 +8,8 @@ import { AccountPage } from './pages/AccountPage'
 import { CreateUserPage } from './pages/CreateUserPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { GamesPage } from './pages/GamesPage'
-import { ProjectDetailPage } from './pages/ProjectDetailPage'
-import { ProjectsPage } from './pages/ProjectsPage'
+import { CampaignDetailPage } from './pages/CampaignDetailPage'
+import { CampaignsPage } from './pages/CampaignsPage'
 
 function App() {
   const { session, profile, loading, reloadProfile, signOut } = useAuth()
@@ -43,8 +43,8 @@ function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
-        <Route path="projects" element={<ProjectsPage />} />
-        <Route path="projects/:projectId" element={<ProjectDetailPage />} />
+        <Route path="campaigns" element={<CampaignsPage />} />
+        <Route path="campaigns/:campaignId" element={<CampaignDetailPage />} />
         <Route path="games" element={<GamesPage />} />
         <Route path="account" element={<AccountPage />} />
         <Route element={<AdminRoute />}>
