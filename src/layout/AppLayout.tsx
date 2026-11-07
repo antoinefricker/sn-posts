@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router'
-import { Folder, LayoutDashboard, LogOut, Menu, UserCog, UserPlus, Whistle, X } from 'lucide-react'
+import { Calendar, Folder, LayoutDashboard, LogOut, Menu, UserCog, UserPlus, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -44,7 +44,7 @@ export function AppLayout() {
       <NavItem to="/" end icon={<LayoutDashboard />} onNavigate={close}>Dashboard</NavItem>
       <Separator className="my-2" />
       <NavItem to="/campaigns" icon={<Folder />} onNavigate={close}>Campaigns</NavItem>
-      <NavItem to="/games" icon={<Whistle />} onNavigate={close}>Games</NavItem>
+      <NavItem to="/games" icon={<Calendar />} onNavigate={close}>Games</NavItem>
       <Separator className="my-2" />
       <NavItem to="/account" icon={<UserCog />} onNavigate={close}>User edition</NavItem>
       {profile?.is_admin && (
