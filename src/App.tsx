@@ -1,12 +1,18 @@
-import { LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { AdminCreateUser } from './auth/AdminCreateUser'
+import { Navigate, Route, Routes } from 'react-router'
 import { AuthForm } from './auth/AuthForm'
 import { useAuth } from './auth/AuthContext'
-import { EditProfile } from './auth/EditProfile'
+import { Button } from './components/ui/button'
+import { AdminRoute } from './layout/AdminRoute'
+import { AppLayout } from './layout/AppLayout'
+import { AccountPage } from './pages/AccountPage'
+import { CreateUserPage } from './pages/CreateUserPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { GamesPage } from './pages/GamesPage'
+import { CampaignDetailPage } from './pages/CampaignDetailPage'
+import { CampaignsPage } from './pages/CampaignsPage'
 
 function App() {
-  const { session, profile, loading, signOut } = useAuth()
+  const { session, profile, loading, reloadProfile, signOut } = useAuth()
 
   if (loading) {
     return (
@@ -16,37 +22,37 @@ function App() {
     )
   }
   if (!session) return <AuthForm />
+  if (!profile) {
+    return (
+      <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-4 text-center">
+        <h1 className="text-xl font-semibold">Your account is not available</h1>
+        <p className="max-w-sm text-muted-foreground">
+          We could not load your profile. Check your connection and try again, or sign out.
+        </p>
+        <div className="flex gap-2">
+          <Button onClick={reloadProfile}>Try again</Button>
+          <Button variant="outline" onClick={() => void signOut()}>
+            Sign out
+          </Button>
+        </div>
+      </main>
+    )
+  }
 
   return (
-    <div className="min-h-svh bg-muted/40">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <span className="font-semibold">sn-posts</span>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">
-              {profile?.name ?? session.user.email}
-              {profile?.is_admin && ' · admin'}
-            </span>
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut /> Sign out
-            </Button>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto grid max-w-4xl gap-6 p-4 py-8 md:grid-cols-2 md:items-start">
-        <div className="md:col-span-2">
-          <h1 className="text-2xl font-semibold">
-            Welcome{profile ? `, ${profile.name}` : ''}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {session.user.email}
-            {profile && ` · Club ${profile.club_id}`}
-          </p>
-        </div>
-        <EditProfile />
-        {profile?.is_admin && <AdminCreateUser />}
-      </main>
-    </div>
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="campaigns" element={<CampaignsPage />} />
+        <Route path="campaigns/:campaignId" element={<CampaignDetailPage />} />
+        <Route path="games" element={<GamesPage />} />
+        <Route path="account" element={<AccountPage />} />
+        <Route element={<AdminRoute />}>
+          <Route path="users/new" element={<CreateUserPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
   )
 }
 

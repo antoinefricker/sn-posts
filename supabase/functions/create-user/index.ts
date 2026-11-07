@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   // Only admins may create accounts.
   const { data: profile } = await admin
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, club_id')
     .eq('id', caller.user.id)
     .single()
   if (!profile?.is_admin) return json({ error: 'Admins only' }, 403)
@@ -51,22 +51,51 @@ Deno.serve(async (req) => {
     return json({ error: 'Invalid JSON' }, 400)
   }
   const name = String(body.name ?? '').trim()
-  const clubId = String(body.clubId ?? '').trim()
   const email = String(body.email ?? '').trim()
   const password = String(body.password ?? '')
   const makeAdmin = body.isAdmin === true
-  if (!name || !clubId || !email || password.length < 6) {
-    return json({ error: 'name, clubId, email and a password of 6+ characters are required' }, 400)
+  if (!name || !email || password.length < 6) {
+    return json({ error: 'name, email and a password of 6+ characters are required' }, 400)
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { name, club_id: clubId },
-    app_metadata: { created_by_admin: true, make_admin: makeAdmin },
-  })
-  if (error) return json({ error: error.message }, 400)
+  // GoTrue does not pass admin-supplied app_metadata to the database triggers, and user metadata
+  // is client-controlled. So the caller's club and the admin flag travel in a short-lived invite
+  // row (service role only, honored for one minute) that the sign-up triggers check and consume.
+  const inviteEmail = email.toLowerCase()
+  let inserted = false
+  try {
+    // Stale rows must not block a new invite (the primary key is the email).
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString()
+    await admin.from('user_invites').delete().eq('email', inviteEmail).lt('created_at', oneMinuteAgo)
 
-  return json({ id: data.user.id, email: data.user.email, isAdmin: makeAdmin }, 201)
+    const { error: inviteError } = await admin
+      .from('user_invites')
+      .insert({ email: inviteEmail, club_id: profile.club_id, make_admin: makeAdmin })
+    if (inviteError) {
+      if (inviteError.code === '23505') {
+        return json({ error: 'An account for this email is already being created. Try again shortly.' }, 409)
+      }
+      return json({ error: inviteError.message }, 500)
+    }
+    inserted = true
+
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name },
+    })
+    if (error) return json({ error: error.message }, 400)
+    return json({ id: data.user.id, email: data.user.email, isAdmin: makeAdmin }, 201)
+  } catch (e) {
+    console.error('create-user failed', e)
+    return json({ error: 'Could not create the account' }, 500)
+  } finally {
+    // Consumed on success; this clears our own invite when creation failed (e.g. email taken).
+    // Never delete a row we did not insert: it belongs to another admin's in-flight call.
+    if (inserted) {
+      const { error: cleanupError } = await admin.from('user_invites').delete().eq('email', inviteEmail)
+      if (cleanupError) console.error('create-user: invite cleanup failed', cleanupError)
+    }
+  }
 })

@@ -22,10 +22,12 @@ npm run dev
 | `make build`               | `npm run build`                             | Type-check and build to `dist/`                                    |
 | `make preview`             | `npm run preview`                           | Serve the production build locally                                 |
 | `make lint`                | `npm run lint`                              | Lint with Oxlint                                                   |
+| `make test`                | `npm test`                                  | Run the Vitest unit tests (no Docker or Supabase needed)           |
 | `make supabase-start`      | `npx supabase start`                        | Start the local stack (incl. edge functions) and apply migrations  |
 | `make supabase-status`     | `npx supabase status`                       | Show the local API URL and publishable key                         |
 | `make supabase-stop`       | `npx supabase stop`                         | Shut the local stack down                                          |
 | `make db-reset`            | `npx supabase db reset`                     | Rebuild the local database (reopens sign-up for a new first admin) |
+| `make db-test`             | `npx supabase test db`                      | Run the pgTAP database tests (needs the local stack running)       |
 | `make link`                | `npx supabase link`                         | Link this folder to a cloud Supabase project                       |
 | `make db-push`             | `npx supabase db push`                      | Apply migrations to the linked cloud project                       |
 | `make deploy-function`     | `npx supabase functions deploy create-user` | Deploy the `create-user` edge function                             |
@@ -46,13 +48,13 @@ Styled with [Tailwind CSS](https://tailwindcss.com) v4 and [shadcn/ui](https://u
 
 ## Authentication (Supabase)
 
-Accounts have **name, club ID, email and password**; sign-in is email + password via Supabase Auth, and name / club ID / admin flag live in `public.profiles` (row-level security: users read and edit only their own profile, and can never change `is_admin`). Email confirmation is off.
+Accounts have a **name, email and password** and belong to a **club**; sign-in is email + password via Supabase Auth. The name, the club link and the admin flag live in `public.profiles`, and clubs live in `public.clubs` (each has a UUID, a unique **code** and a **name**). Email confirmation is off.
 
-**Roles**
+**Roles (per club)**
 
-- The **first account** to sign up becomes an **admin**. Public sign-up is then closed (a `before insert` trigger on `auth.users` rejects it, so the Auth API can't be used to bypass it) and the sign-up form disappears.
-- **Every user** can edit their own name, club ID, email and password from the "Your information" form (RLS allows updates to their own row only, and never to `is_admin`). If the project requires email-change confirmation, the new address takes effect after the user confirms it.
-- **Admins** get a "Create a user account" form after signing in, optionally making the new user an admin too. It calls the [`create-user`](supabase/functions/create-user/index.ts) edge function, which verifies the caller is an admin and creates the user with the service-role key (never exposed to the browser).
+- The **first account** to sign up creates the club (the sign-up form asks for a club code and a club name) and becomes its **admin**. Public sign-up is then closed (a `before insert` trigger on `auth.users` rejects it, so the Auth API can't be used to bypass it) and the sign-up form disappears.
+- **Club admins** get a "User creation" page after signing in, optionally making the new user an admin too. It calls the [`create-user`](supabase/functions/create-user/index.ts) edge function, which verifies the caller is an admin and creates the user in the **caller's own club** (any club in the request body is ignored) with the service-role key (never exposed to the browser). To get the new account past the closed sign-up gate and into the right club, the function writes a short-lived row (valid for 1 minute) into `public.user_invites`, which only the service role can access; the sign-up triggers check and consume it.
+- **Every user** can edit their own name, email and password from the "User edition" page. Users cannot change their club or admin flag (RLS only allows updating the `name` column of the profile). If the project requires email-change confirmation, the new address takes effect after the user confirms it.
 
 Schema lives in [`supabase/migrations`](supabase/migrations). To run everything locally (requires Docker):
 
@@ -65,7 +67,35 @@ npm run dev
 
 `make db-reset` rebuilds the local database (and reopens sign-up for a new first admin); `make supabase-stop` shuts the stack down.
 
-On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`.
+On a cloud project, apply the schema and deploy the function: `make link`, `make db-push`, `make deploy-function`. Run `make db-push` (migrations) **before** `make deploy-function`: the function relies on the `user_invites` table.
+
+**Local development notes**
+
+- After `make supabase-start` or `make db-reset`, restart the edge runtime container with `docker restart supabase_edge_runtime_sn-posts`; otherwise `create-user` answers `BOOT_ERROR`.
+- The clubs migration turns the text club IDs of existing accounts into club records (code = name = the old value). That path was only tested on an empty database: check it manually on a populated one before running `make db-push` against a cloud project. Run `select btrim(club_id), count(*) from public.profiles group by 1` on the old schema first to spot variants such as `ABC` / `abc` or tab/space padding, which would become separate clubs.
+
+## Clubs, campaigns and games
+
+Everything belongs to a **club**. A club has **campaigns** and **games**; a campaign groups games through the `campaign_games` link table, and the same game can appear in several campaigns.
+
+- **Game**: the **code** is the game's official code, unique within a club (compared trimmed and case-insensitively). The **team name** is the age category. **Location** left empty means the game is at home. The **score** is two optional numbers (ours and theirs, both set or both empty). Games also have an opponent, a date and a kick-off time.
+- **Campaign**: a title and a list of games. A campaign may be empty.
+- **Deleting**: deleting a campaign keeps its games; deleting a game removes it from every campaign it was in; deleting a user keeps what they created (shown as created by an unknown member).
+- **Who can do what**: every member of a club can create, edit and delete the club's campaigns and games, and link games to campaigns. There is no per-user ownership; only creating user accounts is limited to club admins.
+- **Club isolation**: row-level security on `clubs`, `profiles`, `campaigns`, `games` and `campaign_games` limits every read and write to the caller's own club, and composite foreign keys stop a link from ever joining records of different clubs. A user of another club sees nothing, including through direct API calls.
+
+**Pages**
+
+| Page            | Description                                                                   |
+| --------------- | ----------------------------------------------------------------------------- |
+| Dashboard       | Recent campaigns and upcoming games of the club                                |
+| Campaigns        | List, create, rename and delete campaigns                                      |
+| Campaign page    | The games of one campaign: add a new game, pick an existing one, edit, remove it from the campaign, or delete it from the club |
+| Games           | All the club's games: edit and delete (games are added from a campaign page)                                |
+| User edition    | Edit your own name, email and password                                        |
+| User creation   | Club admins only: create a user in your club                                  |
+
+Tests: `make test` runs the Vitest unit tests, `make db-test` runs the pgTAP tests for clubs, campaigns and games (see the command table above).
 
 ## Deploying to Vercel
 

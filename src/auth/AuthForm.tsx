@@ -40,7 +40,8 @@ export function AuthForm() {
     const message = isSignUp
       ? await signUp({
           name: field('name'),
-          clubId: field('clubId'),
+          clubCode: field('clubCode'),
+          clubName: field('clubName'),
           email: field('email'),
           password: String(form.get('password') ?? ''),
         })
@@ -71,7 +72,8 @@ export function AuthForm() {
             {isSignUp && (
               <>
                 <FormField label="Name" name="name" autoComplete="name" required />
-                <FormField label="Club ID" name="clubId" required />
+                <FormField label="Club code" name="clubCode" required />
+                <FormField label="Club name" name="clubName" required />
               </>
             )}
             <FormField label="Email" name="email" type="email" autoComplete="email" required />
