@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CampaignForm } from '@/components/CampaignForm'
@@ -22,7 +22,9 @@ function gamesLabel(count: number): string {
 export function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [formOpen, setFormOpen] = useState(false)
+  // `?new=1` (from the dashboard's "Create a campaign") opens the creation form on arrival.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [formOpen, setFormOpen] = useState(() => searchParams.has('new'))
   const [deleting, setDeleting] = useState<Campaign | null>(null)
   const [editing, setEditing] = useState<Campaign | undefined>(undefined)
 
@@ -38,6 +40,11 @@ export function CampaignsPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // Drop the flag once consumed so a reload or Back does not reopen the form.
+  useEffect(() => {
+    if (searchParams.has('new')) setSearchParams({}, { replace: true })
+  }, [searchParams, setSearchParams])
 
   function openCreate() {
     setEditing(undefined)

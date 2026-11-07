@@ -59,7 +59,7 @@ export function RecentCampaignsCard() {
         ) : campaigns.length === 0 ? (
           <div className="grid justify-items-start gap-2">
             <p className="font-medium">No campaigns yet</p>
-            <Link to="/campaigns" className={buttonVariants({ variant: 'outline' })}>
+            <Link to="/campaigns?new=1" className={buttonVariants({ variant: 'outline' })}>
               Create a campaign
             </Link>
             <Link to="/campaigns" className="text-sm underline underline-offset-4">
