@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Calendar } from 'lucide-react'
 import { Link } from 'react-router'
 import { formatGameWhen } from '@/components/GameRow'
 import { Button } from '@/components/ui/button'
@@ -42,7 +43,10 @@ export function UpcomingGamesCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upcoming games</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="size-4" aria-hidden />
+          Upcoming games
+        </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3">
         {error ? (

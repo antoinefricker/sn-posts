@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Folder } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,7 +45,10 @@ export function RecentCampaignsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent campaigns</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Folder className="size-4" aria-hidden />
+          Recent campaigns
+        </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3">
         {error ? (
