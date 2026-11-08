@@ -82,9 +82,7 @@ export function AppLayout() {
         {renderNav('Main navigation')}
       </aside>
       <main className="min-w-0 flex-1 p-4 py-8 md:px-8">
-        <div className="mx-auto max-w-4xl">
-          <Outlet />
-        </div>
+        <Outlet />
       </main>
     </div>
   )
