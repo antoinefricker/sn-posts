@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Pencil, Trash2, Unlink } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { GameForm } from '@/components/GameForm'
 import { Button } from '@/components/ui/button'
@@ -52,16 +53,34 @@ export function GameActions({ game, campaignId, onChanged }: GameActionsProps) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-        Edit
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={`Edit ${game.code}`}
+        title="Edit"
+        onClick={() => setEditOpen(true)}
+      >
+        <Pencil />
       </Button>
       {campaignId && (
-        <Button variant="outline" size="sm" onClick={() => setRemoveOpen(true)}>
-          Remove from campaign
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={`Remove ${game.code} from campaign`}
+          title="Remove from campaign"
+          onClick={() => setRemoveOpen(true)}
+        >
+          <Unlink />
         </Button>
       )}
-      <Button variant="outline" size="sm" onClick={() => setDeleteOpen(true)}>
-        Delete
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={`Delete ${game.code}`}
+        title="Delete"
+        onClick={() => setDeleteOpen(true)}
+      >
+        <Trash2 />
       </Button>
       <Dialog open={editOpen} onOpenChange={handleEditOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">

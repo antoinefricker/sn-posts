@@ -7,12 +7,14 @@ type GamesTableProps<T extends Game> = {
   games: T[]
   /** Renders the action buttons for a row. */
   actions?: (game: T) => ReactNode
+  /** When set, adds a "Campaigns" column rendered by this function. */
+  campaigns?: (game: T) => ReactNode
 }
 
 const headClass = 'px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap'
 const cellClass = 'px-3 py-2 align-middle'
 
-export function GamesTable<T extends Game>({ games, actions }: GamesTableProps<T>) {
+export function GamesTable<T extends Game>({ games, actions, campaigns }: GamesTableProps<T>) {
   return (
     <div className="overflow-x-auto rounded-lg border">
       <table className="w-full text-sm">
@@ -39,6 +41,11 @@ export function GamesTable<T extends Game>({ games, actions }: GamesTableProps<T
             <th scope="col" className={headClass}>
               Created by
             </th>
+            {campaigns && (
+              <th scope="col" className={headClass}>
+                Campaigns
+              </th>
+            )}
             {actions && (
               <th scope="col" className={headClass}>
                 <span className="sr-only">Actions</span>
@@ -56,6 +63,7 @@ export function GamesTable<T extends Game>({ games, actions }: GamesTableProps<T
               <td className={cellClass}>{isHomeGame(game) ? 'Home' : game.location}</td>
               <td className={cellClass}>{formatScore(game) ?? '—'}</td>
               <td className={cellClass}>{game.creator_name ?? 'Unknown member'}</td>
+              {campaigns && <td className={cellClass}>{campaigns(game)}</td>}
               {actions && (
                 <td className={cellClass}>
                   <div className="flex flex-wrap justify-end gap-2">{actions(game)}</div>
