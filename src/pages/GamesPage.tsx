@@ -1,29 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { CampaignLinks } from '@/components/CampaignLinks'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { listGames } from '@/data/games'
 import type { GameWithCampaigns } from '@/data/types'
-
-function CampaignLinks({ campaigns }: { campaigns: GameWithCampaigns['campaigns'] }) {
-  if (campaigns.length === 0) {
-    return <span className="text-muted-foreground">None</span>
-  }
-  return (
-    <>
-      {campaigns.map((campaign, i) => (
-        <span key={campaign.id}>
-          {i > 0 && ', '}
-          <Link to={`/campaigns/${campaign.id}`} className="underline underline-offset-4">
-            {campaign.title}
-          </Link>
-        </span>
-      ))}
-    </>
-  )
-}
 
 export function GamesPage() {
   const [games, setGames] = useState<GameWithCampaigns[] | null>(null)

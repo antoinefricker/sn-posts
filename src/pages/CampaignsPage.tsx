@@ -1,23 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CampaignForm } from '@/components/CampaignForm'
+import { CampaignsTable } from '@/components/CampaignsTable'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { createCampaign, deleteCampaign, listCampaigns, updateCampaign } from '@/data/campaigns'
 import { toMessage } from '@/data/errors'
 import { deleteCampaignDescription } from '@/lib/campaigns'
 import type { Campaign } from '@/data/types'
-
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
-
-function formatDate(value: string): string {
-  return dateFormat.format(new Date(value))
-}
-
-function gamesLabel(count: number): string {
-  return `${count} ${count === 1 ? 'game' : 'games'}`
-}
 
 export function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null)
@@ -88,66 +79,31 @@ export function CampaignsPage() {
       ) : campaigns.length === 0 ? (
         <p className="text-muted-foreground">No campaigns yet. Create the first one.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-muted/50">
-              <tr>
-                {['Title', 'Games', 'Created by', 'Created', 'Updated'].map((label) => (
-                  <th
-                    key={label}
-                    scope="col"
-                    className="px-3 py-2 text-left font-medium whitespace-nowrap text-muted-foreground"
-                  >
-                    {label}
-                  </th>
-                ))}
-                <th scope="col" className="px-3 py-2">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {campaigns.map((campaign) => (
-                <tr key={campaign.id}>
-                  <td className="px-3 py-2 align-middle">
-                    <Link
-                      to={`/campaigns/${campaign.id}`}
-                      className="font-medium underline-offset-4 hover:underline"
-                    >
-                      {campaign.title}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 align-middle whitespace-nowrap">{gamesLabel(campaign.game_count)}</td>
-                  <td className="px-3 py-2 align-middle">{campaign.creator_name ?? 'Unknown member'}</td>
-                  <td className="px-3 py-2 align-middle whitespace-nowrap">{formatDate(campaign.created_at)}</td>
-                  <td className="px-3 py-2 align-middle whitespace-nowrap">{formatDate(campaign.updated_at)}</td>
-                  <td className="px-3 py-2 align-middle">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon-sm"
-                        aria-label={`Edit ${campaign.title}`}
-                        title="Edit"
-                        onClick={() => openEdit(campaign)}
-                      >
-                        <Pencil />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon-sm"
-                        aria-label={`Delete ${campaign.title}`}
-                        title="Delete"
-                        onClick={() => setDeleting(campaign)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <CampaignsTable
+          campaigns={campaigns}
+          actions={(campaign) => (
+            <>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={`Edit ${campaign.title}`}
+                title="Edit"
+                onClick={() => openEdit(campaign)}
+              >
+                <Pencil />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={`Delete ${campaign.title}`}
+                title="Delete"
+                onClick={() => setDeleting(campaign)}
+              >
+                <Trash2 />
+              </Button>
+            </>
+          )}
+        />
       )}
       <CampaignForm
         open={formOpen}

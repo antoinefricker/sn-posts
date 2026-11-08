@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Folder } from 'lucide-react'
 import { Link } from 'react-router'
+import { CampaignsTable } from '@/components/CampaignsTable'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toMessage } from '@/data/errors'
@@ -8,11 +9,6 @@ import { listCampaigns } from '@/data/campaigns'
 import type { Campaign } from '@/data/types'
 
 const RECENT_LIMIT = 5
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
-
-function gamesLabel(count: number): string {
-  return `${count} ${count === 1 ? 'game' : 'games'}`
-}
 
 export function RecentCampaignsCard() {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null)
@@ -72,22 +68,7 @@ export function RecentCampaignsCard() {
           </div>
         ) : (
           <>
-            <ul className="grid gap-3">
-              {campaigns.map((campaign) => (
-                <li key={campaign.id} className="grid gap-1">
-                  <Link
-                    to={`/campaigns/${campaign.id}`}
-                    className="font-medium underline-offset-4 hover:underline"
-                  >
-                    {campaign.title}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">
-                    {gamesLabel(campaign.game_count)} · Updated{' '}
-                    {dateFormat.format(new Date(campaign.updated_at))}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <CampaignsTable campaigns={campaigns} />
             <Link to="/campaigns" className="text-sm underline underline-offset-4">
               View all campaigns
             </Link>

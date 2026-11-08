@@ -17,3 +17,17 @@ export function upcomingGames<T extends { game_date: string; kickoff_time: strin
     .slice(0, limit)
     .map(({ game }) => game)
 }
+
+/** Games whose kick-off is strictly before `now`, most recent first. */
+export function lastGames<T extends { game_date: string; kickoff_time: string }>(
+  games: T[],
+  now: Date,
+  limit: number,
+): T[] {
+  return games
+    .map((game) => ({ game, at: toLocalDate(game.game_date, game.kickoff_time).getTime() }))
+    .filter(({ at }) => at < now.getTime())
+    .sort((a, b) => b.at - a.at)
+    .slice(0, limit)
+    .map(({ game }) => game)
+}

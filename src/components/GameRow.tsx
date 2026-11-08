@@ -3,12 +3,19 @@ import { Card, CardContent } from '@/components/ui/card'
 import type { Game } from '@/data/types'
 import { formatScore, isHomeGame } from '@/lib/games'
 
-const whenFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const whenFormat = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+})
 
-/** 'YYYY-MM-DD' + 'HH:MM[:SS]' as local date and time in the user's locale. */
+/** 'YYYY-MM-DD' + 'HH:MM[:SS]' as 'DD/MM/YYYY HH:MM'. */
 export function formatGameWhen(game: Pick<Game, 'game_date' | 'kickoff_time'>): string {
   const when = new Date(`${game.game_date}T${game.kickoff_time}`)
-  return Number.isNaN(when.getTime()) ? `${game.game_date} ${game.kickoff_time}` : whenFormat.format(when)
+  return Number.isNaN(when.getTime()) ? `${game.game_date} ${game.kickoff_time}` : whenFormat.format(when).replace(', ', ' ')
 }
 
 type GameRowProps = {

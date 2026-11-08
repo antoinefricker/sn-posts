@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Calendar } from 'lucide-react'
 import { Link } from 'react-router'
-import { formatGameWhen } from '@/components/GameRow'
+import { CampaignLinks } from '@/components/CampaignLinks'
+import { GamesTable } from '@/components/GamesTable'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toMessage } from '@/data/errors'
 import { listGames } from '@/data/games'
 import type { GameWithCampaigns } from '@/data/types'
-import { isHomeGame } from '@/lib/games'
 import { upcomingGames } from '@/lib/upcoming'
 
 const UPCOMING_LIMIT = 5
@@ -67,36 +67,7 @@ export function UpcomingGamesCard() {
           </div>
         ) : (
           <>
-            <ul className="grid gap-3">
-              {games.map((game) => (
-                <li key={game.id} className="grid gap-1">
-                  <p className="font-medium">
-                    {game.team_name} vs {game.opponent_name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatGameWhen(game)} · {isHomeGame(game) ? 'Home' : game.location}
-                  </p>
-                  {game.campaigns.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Not used in any campaign</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      In:{' '}
-                      {game.campaigns.map((campaign, i) => (
-                        <span key={campaign.id}>
-                          {i > 0 && ', '}
-                          <Link
-                            to={`/campaigns/${campaign.id}`}
-                            className="underline underline-offset-4"
-                          >
-                            {campaign.title}
-                          </Link>
-                        </span>
-                      ))}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <GamesTable games={games} campaigns={(game) => <CampaignLinks campaigns={game.campaigns} />} />
             <Link to="/games" className="text-sm underline underline-offset-4">
               View all games
             </Link>

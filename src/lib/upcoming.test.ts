@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { upcomingGames } from './upcoming'
+import { lastGames, upcomingGames } from './upcoming'
 
 const g = (game_date: string, kickoff_time: string, id = '') => ({
   game_date,
@@ -62,5 +62,31 @@ describe('upcomingGames', () => {
 
   it('returns [] for empty input', () => {
     expect(upcomingGames([], now, 3)).toEqual([])
+  })
+})
+
+describe('lastGames', () => {
+  it('excludes a game at exactly now and future games', () => {
+    const games = [g('2026-11-06', '14:00:00'), g('2026-11-07', '08:00:00')]
+    expect(lastGames(games, now, 5)).toEqual([])
+  })
+
+  it('includes a game today whose kick-off already passed', () => {
+    const games = [g('2026-11-06', '10:00:00')]
+    expect(lastGames(games, now, 5)).toEqual(games)
+  })
+
+  it('sorts most recent first without mutating the input', () => {
+    const a = g('2026-11-01', '09:00:00', 'a')
+    const b = g('2026-11-05', '18:00:00', 'b')
+    const c = g('2026-11-03', '08:00:00', 'c')
+    const input = [a, b, c]
+    expect(lastGames(input, now, 5).map((x) => x.id)).toEqual(['b', 'c', 'a'])
+    expect(input).toEqual([a, b, c])
+  })
+
+  it('respects the limit', () => {
+    const games = [g('2026-11-01', '08:00:00'), g('2026-11-02', '08:00:00'), g('2026-11-03', '08:00:00')]
+    expect(lastGames(games, now, 2)).toEqual([games[2], games[1]])
   })
 })
