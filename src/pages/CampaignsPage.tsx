@@ -1,23 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { Card, CardContent } from '@/components/ui/card'
+import { useSearchParams } from 'react-router'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CampaignForm } from '@/components/CampaignForm'
+import { CampaignsTable } from '@/components/CampaignsTable'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { createCampaign, deleteCampaign, listCampaigns, updateCampaign } from '@/data/campaigns'
 import { toMessage } from '@/data/errors'
 import { deleteCampaignDescription } from '@/lib/campaigns'
 import type { Campaign } from '@/data/types'
-
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
-
-function formatDate(value: string): string {
-  return dateFormat.format(new Date(value))
-}
-
-function gamesLabel(count: number): string {
-  return `${count} ${count === 1 ? 'game' : 'games'}`
-}
 
 export function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null)
@@ -88,36 +79,31 @@ export function CampaignsPage() {
       ) : campaigns.length === 0 ? (
         <p className="text-muted-foreground">No campaigns yet. Create the first one.</p>
       ) : (
-        <ul className="grid gap-3">
-          {campaigns.map((campaign) => (
-            <li key={campaign.id}>
-              <Card>
-                <CardContent className="flex items-center justify-between gap-2">
-                  <div className="grid gap-1">
-                    <Link
-                      to={`/campaigns/${campaign.id}`}
-                      className="font-medium underline-offset-4 hover:underline"
-                    >
-                      {campaign.title}
-                    </Link>
-                    <p className="text-sm text-muted-foreground">
-                      {campaign.creator_name ?? 'Unknown member'} · Created {formatDate(campaign.created_at)}{' '}
-                      · Updated {formatDate(campaign.updated_at)} · {gamesLabel(campaign.game_count)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(campaign)}>
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeleting(campaign)}>
-                      Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ul>
+        <CampaignsTable
+          campaigns={campaigns}
+          actions={(campaign) => (
+            <>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={`Edit ${campaign.title}`}
+                title="Edit"
+                onClick={() => openEdit(campaign)}
+              >
+                <Pencil />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={`Delete ${campaign.title}`}
+                title="Delete"
+                onClick={() => setDeleting(campaign)}
+              >
+                <Trash2 />
+              </Button>
+            </>
+          )}
+        />
       )}
       <CampaignForm
         open={formOpen}

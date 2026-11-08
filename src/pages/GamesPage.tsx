@@ -1,30 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { CampaignLinks } from '@/components/CampaignLinks'
 import { GameActions } from '@/components/GameActions'
-import { GameRow } from '@/components/GameRow'
+import { GamesTable } from '@/components/GamesTable'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { listGames } from '@/data/games'
 import type { GameWithCampaigns } from '@/data/types'
-
-function CampaignLinks({ campaigns }: { campaigns: GameWithCampaigns['campaigns'] }) {
-  if (campaigns.length === 0) {
-    return <p className="px-1 text-sm text-muted-foreground">Not used in any campaign</p>
-  }
-  return (
-    <p className="px-1 text-sm text-muted-foreground">
-      In:{' '}
-      {campaigns.map((campaign, i) => (
-        <span key={campaign.id}>
-          {i > 0 && ', '}
-          <Link to={`/campaigns/${campaign.id}`} className="underline underline-offset-4">
-            {campaign.title}
-          </Link>
-        </span>
-      ))}
-    </p>
-  )
-}
 
 export function GamesPage() {
   const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
@@ -65,14 +46,11 @@ export function GamesPage() {
           <p className="text-sm text-muted-foreground">Games are added from a campaign page.</p>
         </div>
       ) : (
-        <ul className="grid gap-3">
-          {games.map((game) => (
-            <li key={game.id} className="grid gap-1">
-              <GameRow game={game} actions={<GameActions game={game} onChanged={load} />} />
-              <CampaignLinks campaigns={game.campaigns} />
-            </li>
-          ))}
-        </ul>
+        <GamesTable
+          games={games}
+          campaigns={(game) => <CampaignLinks campaigns={game.campaigns} />}
+          actions={(game) => <GameActions game={game} onChanged={load} />}
+        />
       )}
     </div>
   )

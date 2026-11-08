@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { AddGameDialog } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
-import { GameRow } from '@/components/GameRow'
+import { GamesTable } from '@/components/GamesTable'
 import { listCampaignGames } from '@/data/games'
 import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
 import type { GameWithCampaigns, Campaign } from '@/data/types'
@@ -150,16 +150,10 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
         ) : games.length === 0 ? (
           <p className="text-muted-foreground">No games in this campaign yet.</p>
         ) : (
-          <ul className="grid gap-3">
-            {games.map((game) => (
-              <li key={game.id}>
-                <GameRow
-                  game={game}
-                  actions={<GameActions game={game} campaignId={campaign.id} onChanged={refresh} />}
-                />
-              </li>
-            ))}
-          </ul>
+          <GamesTable
+            games={games}
+            actions={(game) => <GameActions game={game} campaignId={campaign.id} onChanged={refresh} />}
+          />
         )}
       </section>
       <AddGameDialog
