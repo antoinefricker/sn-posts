@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Card, CardContent } from '@/components/ui/card'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CampaignForm } from '@/components/CampaignForm'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -88,36 +88,66 @@ export function CampaignsPage() {
       ) : campaigns.length === 0 ? (
         <p className="text-muted-foreground">No campaigns yet. Create the first one.</p>
       ) : (
-        <ul className="grid gap-3">
-          {campaigns.map((campaign) => (
-            <li key={campaign.id}>
-              <Card>
-                <CardContent className="flex items-center justify-between gap-2">
-                  <div className="grid gap-1">
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/50">
+              <tr>
+                {['Title', 'Games', 'Created by', 'Created', 'Updated'].map((label) => (
+                  <th
+                    key={label}
+                    scope="col"
+                    className="px-3 py-2 text-left font-medium whitespace-nowrap text-muted-foreground"
+                  >
+                    {label}
+                  </th>
+                ))}
+                <th scope="col" className="px-3 py-2">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {campaigns.map((campaign) => (
+                <tr key={campaign.id}>
+                  <td className="px-3 py-2 align-middle">
                     <Link
                       to={`/campaigns/${campaign.id}`}
                       className="font-medium underline-offset-4 hover:underline"
                     >
                       {campaign.title}
                     </Link>
-                    <p className="text-sm text-muted-foreground">
-                      {campaign.creator_name ?? 'Unknown member'} · Created {formatDate(campaign.created_at)}{' '}
-                      · Updated {formatDate(campaign.updated_at)} · {gamesLabel(campaign.game_count)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(campaign)}>
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeleting(campaign)}>
-                      Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ul>
+                  </td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">{gamesLabel(campaign.game_count)}</td>
+                  <td className="px-3 py-2 align-middle">{campaign.creator_name ?? 'Unknown member'}</td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">{formatDate(campaign.created_at)}</td>
+                  <td className="px-3 py-2 align-middle whitespace-nowrap">{formatDate(campaign.updated_at)}</td>
+                  <td className="px-3 py-2 align-middle">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label={`Edit ${campaign.title}`}
+                        title="Edit"
+                        onClick={() => openEdit(campaign)}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label={`Delete ${campaign.title}`}
+                        title="Delete"
+                        onClick={() => setDeleting(campaign)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <CampaignForm
         open={formOpen}
