@@ -14,7 +14,7 @@ export type GameInput = {
   opponent_name: string
   game_date: string
   kickoff_time: string
-  location: string | null
+  is_home: boolean
   score_ours: number | null
   score_theirs: number | null
 }

@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
-import { formatGameWhen } from '@/components/GameRow'
 import type { Game } from '@/data/types'
-import { formatScore, isHomeGame } from '@/lib/games'
+import { formatGameWhen, formatScore } from '@/lib/games'
 
 type GamesTableProps<T extends Game> = {
   games: T[]
@@ -33,13 +32,10 @@ export function GamesTable<T extends Game>({ games, actions, campaigns }: GamesT
               When
             </th>
             <th scope="col" className={headClass}>
-              Location
+              Venue
             </th>
             <th scope="col" className={headClass}>
               Score
-            </th>
-            <th scope="col" className={headClass}>
-              Created by
             </th>
             {campaigns && (
               <th scope="col" className={headClass}>
@@ -60,9 +56,8 @@ export function GamesTable<T extends Game>({ games, actions, campaigns }: GamesT
               <td className={cellClass}>{game.team_name}</td>
               <td className={cellClass}>{game.opponent_name}</td>
               <td className={`${cellClass} whitespace-nowrap`}>{formatGameWhen(game)}</td>
-              <td className={cellClass}>{isHomeGame(game) ? 'Home' : game.location}</td>
+              <td className={cellClass}>{game.is_home ? 'Home' : 'Away'}</td>
               <td className={cellClass}>{formatScore(game) ?? '—'}</td>
-              <td className={cellClass}>{game.creator_name ?? 'Unknown member'}</td>
               {campaigns && <td className={cellClass}>{campaigns(game)}</td>}
               {actions && (
                 <td className={cellClass}>

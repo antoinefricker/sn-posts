@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase'
 import { normalizeGameCode } from '@/lib/games'
+import type { GamesImportPlan } from '@/lib/gamesCsv'
 import type { Game, GameInput, GameWithCampaigns } from './types'
 
 type GameRow = Omit<Game, 'creator_name'> & {
@@ -12,7 +13,7 @@ type GameRowWithCampaigns = GameRow & {
 }
 
 const GAME_COLUMNS =
-  'id, created_by, code, team_name, opponent_name, game_date, kickoff_time, location, score_ours, score_theirs, created_at, updated_at, creator:profiles!created_by(name)'
+  'id, created_by, code, team_name, opponent_name, game_date, kickoff_time, is_home, score_ours, score_theirs, created_at, updated_at, creator:profiles!created_by(name)'
 const GAME_WITH_CAMPAIGNS = `${GAME_COLUMNS}, campaign_games(campaigns(id, title))`
 
 function toGame({ creator, ...row }: GameRow): Game {
@@ -34,7 +35,7 @@ function toPayload(input: GameInput): GameInput {
     opponent_name: input.opponent_name,
     game_date: input.game_date,
     kickoff_time: input.kickoff_time,
-    location: input.location,
+    is_home: input.is_home,
     score_ours: input.score_ours,
     score_theirs: input.score_theirs,
   }
@@ -104,6 +105,13 @@ export async function deleteGame(id: string): Promise<void> {
   if (error) throw error
 }
 
+/** Deletes every game of the club (row-level security limits it to the caller's club). */
+export async function deleteAllGames(): Promise<void> {
+  // PostgREST refuses a delete without a filter; every row has an id.
+  const { error } = await supabase.from('games').delete().not('id', 'is', null)
+  if (error) throw error
+}
+
 export async function addGameToCampaign(campaignId: string, gameId: string): Promise<void> {
   const { error } = await supabase
     .from('campaign_games')
@@ -118,4 +126,20 @@ export async function removeGameFromCampaign(campaignId: string, gameId: string)
     .eq('campaign_id', campaignId)
     .eq('game_id', gameId)
   if (error) throw error
+}
+
+const UPDATE_CHUNK = 10
+
+/**
+ * Applies an import plan: all new games in one insert (all or nothing), then the updates, a few at a
+ * time. An error in the updates leaves the already applied ones in place; re-importing is safe.
+ */
+export async function importGames(plan: GamesImportPlan): Promise<void> {
+  if (plan.create.length > 0) {
+    const { error } = await supabase.from('games').insert(plan.create.map(toPayload))
+    if (error) throw error
+  }
+  for (let i = 0; i < plan.update.length; i += UPDATE_CHUNK) {
+    await Promise.all(plan.update.slice(i, i + UPDATE_CHUNK).map(({ id, input }) => updateGame(id, input)))
+  }
 }

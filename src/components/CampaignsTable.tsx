@@ -27,7 +27,7 @@ export function CampaignsTable({ campaigns, actions }: CampaignsTableProps) {
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           <tr>
-            {['Title', 'Games', 'Created by', 'Created', 'Updated'].map((label) => (
+            {['Title', 'Games', 'Created', 'Updated'].map((label) => (
               <th key={label} scope="col" className={headClass}>
                 {label}
               </th>
@@ -51,7 +51,6 @@ export function CampaignsTable({ campaigns, actions }: CampaignsTableProps) {
                 </Link>
               </td>
               <td className={`${cellClass} whitespace-nowrap`}>{gamesLabel(campaign.game_count)}</td>
-              <td className={cellClass}>{campaign.creator_name ?? 'Unknown member'}</td>
               <td className={`${cellClass} whitespace-nowrap`}>{formatDate(campaign.created_at)}</td>
               <td className={`${cellClass} whitespace-nowrap`}>{formatDate(campaign.updated_at)}</td>
               {actions && (

@@ -1,18 +1,23 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CampaignForm } from '@/components/CampaignForm'
 import { CampaignsTable } from '@/components/CampaignsTable'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { Pagination } from '@/components/Pagination'
 import { createCampaign, deleteCampaign, listCampaigns, updateCampaign } from '@/data/campaigns'
 import { toMessage } from '@/data/errors'
 import { deleteCampaignDescription } from '@/lib/campaigns'
+import { paginate } from '@/lib/pagination'
 import type { Campaign } from '@/data/types'
+
+const PAGE_SIZE = 20
 
 export function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pageNumber, setPageNumber] = useState(1)
   // `?new=1` (from the dashboard's "Create a campaign") opens the creation form on arrival.
   const [searchParams, setSearchParams] = useSearchParams()
   const [formOpen, setFormOpen] = useState(() => searchParams.has('new'))
@@ -36,6 +41,9 @@ export function CampaignsPage() {
   useEffect(() => {
     if (searchParams.has('new')) setSearchParams({}, { replace: true })
   }, [searchParams, setSearchParams])
+
+  // paginate() clamps the page, so deleting the last campaign of a page never leaves an empty page.
+  const page = useMemo(() => paginate(campaigns ?? [], pageNumber, PAGE_SIZE), [campaigns, pageNumber])
 
   function openCreate() {
     setEditing(undefined)
@@ -79,31 +87,34 @@ export function CampaignsPage() {
       ) : campaigns.length === 0 ? (
         <p className="text-muted-foreground">No campaigns yet. Create the first one.</p>
       ) : (
-        <CampaignsTable
-          campaigns={campaigns}
-          actions={(campaign) => (
-            <>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                aria-label={`Edit ${campaign.title}`}
-                title="Edit"
-                onClick={() => openEdit(campaign)}
-              >
-                <Pencil />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                aria-label={`Delete ${campaign.title}`}
-                title="Delete"
-                onClick={() => setDeleting(campaign)}
-              >
-                <Trash2 />
-              </Button>
-            </>
-          )}
-        />
+        <>
+          <CampaignsTable
+            campaigns={page.items}
+            actions={(campaign) => (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={`Edit ${campaign.title}`}
+                  title="Edit"
+                  onClick={() => openEdit(campaign)}
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={`Delete ${campaign.title}`}
+                  title="Delete"
+                  onClick={() => setDeleting(campaign)}
+                >
+                  <Trash2 />
+                </Button>
+              </>
+            )}
+          />
+          <Pagination page={page} noun="campaigns" onPageChange={setPageNumber} />
+        </>
       )}
       <CampaignForm
         open={formOpen}

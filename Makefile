@@ -1,4 +1,4 @@
-.PHONY: start stop build preview lint test supabase-start supabase-status supabase-stop db-reset db-test link db-push deploy-function shadcn-add
+.PHONY: start stop build preview lint test supabase-start supabase-status supabase-stop db-reset db-test link db-push deploy-function shadcn-add ffbb-games
 
 # Start the dev server with HMR
 start:
@@ -60,3 +60,9 @@ deploy-function:
 shadcn-add:
 	@test -n "$(c)" || (echo "Usage: make shadcn-add c=<component>" && exit 1)
 	npx shadcn@latest add $(c)
+
+# Fetch the games of the FFBB teams in scripts/ffbb-urls.txt into games.csv and open it
+# (make ffbb-games out=other.csv to change the output file)
+out ?= games.csv
+ffbb-games:
+	scripts/ffbb-games-to-csv.sh -o $(out) -O
