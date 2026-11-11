@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase'
 import { normalizeGameCode } from '@/lib/games'
+import type { GamesImportPlan } from '@/lib/gamesCsv'
 import type { Game, GameInput, GameWithCampaigns } from './types'
 
 type GameRow = Omit<Game, 'creator_name'> & {
@@ -118,4 +119,20 @@ export async function removeGameFromCampaign(campaignId: string, gameId: string)
     .eq('campaign_id', campaignId)
     .eq('game_id', gameId)
   if (error) throw error
+}
+
+const UPDATE_CHUNK = 10
+
+/**
+ * Applies an import plan: all new games in one insert (all or nothing), then the updates, a few at a
+ * time. An error in the updates leaves the already applied ones in place; re-importing is safe.
+ */
+export async function importGames(plan: GamesImportPlan): Promise<void> {
+  if (plan.create.length > 0) {
+    const { error } = await supabase.from('games').insert(plan.create.map(toPayload))
+    if (error) throw error
+  }
+  for (let i = 0; i < plan.update.length; i += UPDATE_CHUNK) {
+    await Promise.all(plan.update.slice(i, i + UPDATE_CHUNK).map(({ id, input }) => updateGame(id, input)))
+  }
 }
