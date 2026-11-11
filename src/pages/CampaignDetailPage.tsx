@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CampaignForm } from '@/components/CampaignForm'
-import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
 import { AddGameDialog } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
@@ -111,16 +112,22 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
 
   return (
     <div className="grid gap-4">
-      <Link to="/campaigns" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-        Campaigns
-      </Link>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold">{campaign.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {campaign.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(campaign.created_at))}{' '}
-            · Updated {dateFormat.format(new Date(campaign.updated_at))}
-          </p>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/campaigns"
+            aria-label="Back to campaigns"
+            className={buttonVariants({ variant: 'outline', size: 'icon-lg' })}
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+          <div className="grid gap-1">
+            <h1 className="text-2xl font-semibold">{campaign.title}</h1>
+            <p className="text-sm text-muted-foreground">
+              {campaign.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(campaign.created_at))}{' '}
+              · Updated {dateFormat.format(new Date(campaign.updated_at))}
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setEditOpen(true)}>
