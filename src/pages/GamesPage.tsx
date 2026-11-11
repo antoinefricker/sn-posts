@@ -1,5 +1,5 @@
 import { Trash2, Upload } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CampaignLinks } from '@/components/CampaignLinks'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CreateGameDialog } from '@/components/CreateGameDialog'
@@ -7,10 +7,12 @@ import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { ImportGamesDialog } from '@/components/ImportGamesDialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { toMessage } from '@/data/errors'
 import { deleteAllGames, listGames } from '@/data/games'
 import type { GameWithCampaigns } from '@/data/types'
-import { deleteAllGamesDescription } from '@/lib/games'
+import { deleteAllGamesDescription, filterGamesByRange } from '@/lib/games'
 
 export function GamesPage() {
   const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
@@ -18,6 +20,8 @@ export function GamesPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [deleteAllOpen, setDeleteAllOpen] = useState(false)
+  const [rangeStart, setRangeStart] = useState('')
+  const [rangeEnd, setRangeEnd] = useState('')
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -35,6 +39,12 @@ export function GamesPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const visibleGames = useMemo(
+    () => (games ? filterGamesByRange(games, rangeStart, rangeEnd) : null),
+    [games, rangeStart, rangeEnd],
+  )
+  const filtering = rangeStart !== '' || rangeEnd !== ''
 
   return (
     <div className="grid gap-4">
@@ -80,6 +90,46 @@ export function GamesPage() {
           }}
         />
       )}
+      {games && games.length > 0 && (
+        <div className="flex flex-wrap items-end gap-3" role="group" aria-label="Filter by date">
+          <div className="grid gap-1">
+            <Label htmlFor="field-range-start">From</Label>
+            <Input
+              id="field-range-start"
+              type="datetime-local"
+              value={rangeStart}
+              max={rangeEnd || undefined}
+              onChange={(e) => setRangeStart(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="field-range-end">To</Label>
+            <Input
+              id="field-range-end"
+              type="datetime-local"
+              value={rangeEnd}
+              min={rangeStart || undefined}
+              onChange={(e) => setRangeEnd(e.target.value)}
+            />
+          </div>
+          {filtering && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRangeStart('')
+                  setRangeEnd('')
+                }}
+              >
+                Clear
+              </Button>
+              <p className="pb-2 text-sm text-muted-foreground" aria-live="polite">
+                {visibleGames?.length ?? 0} of {games.length} games
+              </p>
+            </>
+          )}
+        </div>
+      )}
       {error ? (
         <div role="alert" className="grid justify-items-start gap-2">
           <p className="text-sm text-destructive">{error}</p>
@@ -94,9 +144,11 @@ export function GamesPage() {
           <p className="font-medium">No games yet</p>
           <p className="text-sm text-muted-foreground">Add a game here, from a campaign page, or import a CSV file.</p>
         </div>
+      ) : visibleGames?.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No games in this date range.</p>
       ) : (
         <GamesTable
-          games={games}
+          games={visibleGames ?? games}
           campaigns={(game) => <CampaignLinks campaigns={game.campaigns} />}
           actions={(game) => <GameActions game={game} onChanged={load} />}
         />

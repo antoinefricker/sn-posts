@@ -53,3 +53,18 @@ export function formatGameWhen(game: { game_date: string; kickoff_time: string }
     ? `${game.game_date} ${game.kickoff_time}`
     : whenFormat.format(when).replace(', ', ' ')
 }
+
+/**
+ * Games whose date and kick-off fall between two <input type="datetime-local"> values
+ * ('YYYY-MM-DDTHH:MM', local time), both included to the minute. An empty bound is open.
+ */
+export function filterGamesByRange<T extends { game_date: string; kickoff_time: string }>(
+  games: T[],
+  start: string,
+  end: string,
+): T[] {
+  return games.filter((game) => {
+    const when = `${game.game_date}T${game.kickoff_time.slice(0, 5)}`
+    return (!start || when >= start) && (!end || when <= end)
+  })
+}
