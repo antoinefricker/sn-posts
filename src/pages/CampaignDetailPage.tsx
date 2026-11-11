@@ -13,7 +13,7 @@ import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
 import type { GameWithCampaigns, Campaign } from '@/data/types'
 import { deleteCampaignDescription } from '@/lib/campaigns'
 
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+const dateFormat = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
 type CampaignState =
   | { status: 'loading' }
@@ -124,8 +124,8 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           <div className="grid gap-1">
             <h1 className="text-2xl font-semibold">{campaign.title}</h1>
             <p className="text-sm text-muted-foreground">
-              {campaign.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(campaign.created_at))}{' '}
-              · Updated {dateFormat.format(new Date(campaign.updated_at))}
+              Created {dateFormat.format(new Date(campaign.created_at))} by{' '}
+              {campaign.creator_name ?? 'Unknown member'} · Updated {dateFormat.format(new Date(campaign.updated_at))}
             </p>
           </div>
         </div>
