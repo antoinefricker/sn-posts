@@ -1,20 +1,23 @@
-import { Upload } from 'lucide-react'
+import { Trash2, Upload } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CampaignLinks } from '@/components/CampaignLinks'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CreateGameDialog } from '@/components/CreateGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { ImportGamesDialog } from '@/components/ImportGamesDialog'
 import { Button } from '@/components/ui/button'
 import { toMessage } from '@/data/errors'
-import { listGames } from '@/data/games'
+import { deleteAllGames, listGames } from '@/data/games'
 import type { GameWithCampaigns } from '@/data/types'
+import { deleteAllGamesDescription } from '@/lib/games'
 
 export function GamesPage() {
   const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -42,6 +45,14 @@ export function GamesPage() {
             <Upload data-icon="inline-start" />
             Import CSV
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setDeleteAllOpen(true)}
+            disabled={!games || games.length === 0}
+          >
+            <Trash2 data-icon="inline-start" />
+            Delete all
+          </Button>
           <Button onClick={() => setAddOpen(true)}>Add game</Button>
         </div>
       </div>
@@ -52,6 +63,23 @@ export function GamesPage() {
         existing={games ?? []}
         onImported={load}
       />
+      {games && games.length > 0 && (
+        <ConfirmDialog
+          open={deleteAllOpen}
+          onOpenChange={setDeleteAllOpen}
+          title={`Delete all ${games.length} games?`}
+          description={deleteAllGamesDescription(
+            games.length,
+            games.filter((g) => g.campaigns.length > 0).length,
+          )}
+          confirmLabel="Delete all games"
+          onConfirm={async () => {
+            await deleteAllGames()
+            setDeleteAllOpen(false)
+            await load()
+          }}
+        />
+      )}
       {error ? (
         <div role="alert" className="grid justify-items-start gap-2">
           <p className="text-sm text-destructive">{error}</p>

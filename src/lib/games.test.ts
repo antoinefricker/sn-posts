@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deleteGameDescription, formatScore, normalizeGameCode } from './games'
+import { deleteAllGamesDescription, deleteGameDescription, formatScore, normalizeGameCode } from './games'
 
 describe('formatScore', () => {
   it('formats a score', () => {
@@ -10,6 +10,23 @@ describe('formatScore', () => {
   })
   it('returns null when unset', () => {
     expect(formatScore({ score_ours: null, score_theirs: null })).toBeNull()
+  })
+})
+
+describe('deleteAllGamesDescription', () => {
+  it('states the count, the campaigns effect and that it cannot be undone', () => {
+    expect(deleteAllGamesDescription(1, 0)).toBe(
+      'Deletes the only game of the club for good. It is not used in any campaign. This cannot be undone.',
+    )
+    expect(deleteAllGamesDescription(93, 0)).toBe(
+      'Deletes all 93 games of the club for good. None of them is used in a campaign. This cannot be undone.',
+    )
+    expect(deleteAllGamesDescription(93, 1)).toBe(
+      'Deletes all 93 games of the club for good. 1 of them is used in a campaign and will be removed from it. This cannot be undone.',
+    )
+    expect(deleteAllGamesDescription(93, 12)).toBe(
+      'Deletes all 93 games of the club for good. 12 of them are used in campaigns and will be removed from them. This cannot be undone.',
+    )
   })
 })
 

@@ -22,6 +22,21 @@ export function deleteGameDescription(campaignCount: number): string {
   return `Deletes the game from the club for good. ${usage} This cannot be undone.`
 }
 
+/** Confirmation text for deleting every game of the club; `linked` is how many are in a campaign. */
+export function deleteAllGamesDescription(total: number, linked: number): string {
+  if (total === 1) {
+    const usage = linked === 0 ? 'It is not used in any campaign.' : 'It is used in a campaign and will be removed from it.'
+    return `Deletes the only game of the club for good. ${usage} This cannot be undone.`
+  }
+  const usage =
+    linked === 0
+      ? 'None of them is used in a campaign.'
+      : linked === 1
+        ? '1 of them is used in a campaign and will be removed from it.'
+        : `${linked} of them are used in campaigns and will be removed from them.`
+  return `Deletes all ${total} games of the club for good. ${usage} This cannot be undone.`
+}
+
 const whenFormat = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: '2-digit',

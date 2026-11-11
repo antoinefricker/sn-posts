@@ -105,6 +105,13 @@ export async function deleteGame(id: string): Promise<void> {
   if (error) throw error
 }
 
+/** Deletes every game of the club (row-level security limits it to the caller's club). */
+export async function deleteAllGames(): Promise<void> {
+  // PostgREST refuses a delete without a filter; every row has an id.
+  const { error } = await supabase.from('games').delete().not('id', 'is', null)
+  if (error) throw error
+}
+
 export async function addGameToCampaign(campaignId: string, gameId: string): Promise<void> {
   const { error } = await supabase
     .from('campaign_games')
