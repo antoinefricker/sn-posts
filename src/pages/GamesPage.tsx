@@ -6,6 +6,7 @@ import { CreateGameDialog } from '@/components/CreateGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { ImportGamesDialog } from '@/components/ImportGamesDialog'
+import { Pagination } from '@/components/Pagination'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,9 @@ import { toMessage } from '@/data/errors'
 import { deleteAllGames, listGames } from '@/data/games'
 import type { GameWithCampaigns } from '@/data/types'
 import { deleteAllGamesDescription, filterGamesByRange } from '@/lib/games'
+import { paginate } from '@/lib/pagination'
+
+const PAGE_SIZE = 20
 
 export function GamesPage() {
   const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
@@ -22,6 +26,7 @@ export function GamesPage() {
   const [deleteAllOpen, setDeleteAllOpen] = useState(false)
   const [rangeStart, setRangeStart] = useState('')
   const [rangeEnd, setRangeEnd] = useState('')
+  const [pageNumber, setPageNumber] = useState(1)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -44,6 +49,8 @@ export function GamesPage() {
     () => (games ? filterGamesByRange(games, rangeStart, rangeEnd) : null),
     [games, rangeStart, rangeEnd],
   )
+  // paginate() clamps the page, so deleting or filtering games never leaves an empty page.
+  const page = useMemo(() => paginate(visibleGames ?? [], pageNumber, PAGE_SIZE), [visibleGames, pageNumber])
   const filtering = rangeStart !== '' || rangeEnd !== ''
 
   return (
@@ -99,7 +106,10 @@ export function GamesPage() {
               type="datetime-local"
               value={rangeStart}
               max={rangeEnd || undefined}
-              onChange={(e) => setRangeStart(e.target.value)}
+              onChange={(e) => {
+                setRangeStart(e.target.value)
+                setPageNumber(1)
+              }}
             />
           </div>
           <div className="grid gap-1">
@@ -109,7 +119,10 @@ export function GamesPage() {
               type="datetime-local"
               value={rangeEnd}
               min={rangeStart || undefined}
-              onChange={(e) => setRangeEnd(e.target.value)}
+              onChange={(e) => {
+                setRangeEnd(e.target.value)
+                setPageNumber(1)
+              }}
             />
           </div>
           {filtering && (
@@ -119,6 +132,7 @@ export function GamesPage() {
                 onClick={() => {
                   setRangeStart('')
                   setRangeEnd('')
+                  setPageNumber(1)
                 }}
               >
                 Clear
@@ -147,11 +161,14 @@ export function GamesPage() {
       ) : visibleGames?.length === 0 ? (
         <p className="text-sm text-muted-foreground">No games in this date range.</p>
       ) : (
-        <GamesTable
-          games={visibleGames ?? games}
-          campaigns={(game) => <CampaignLinks campaigns={game.campaigns} />}
-          actions={(game) => <GameActions game={game} onChanged={load} />}
-        />
+        <>
+          <GamesTable
+            games={page.items}
+            campaigns={(game) => <CampaignLinks campaigns={game.campaigns} />}
+            actions={(game) => <GameActions game={game} onChanged={load} />}
+          />
+          <Pagination page={page} noun="games" onPageChange={setPageNumber} />
+        </>
       )}
     </div>
   )
