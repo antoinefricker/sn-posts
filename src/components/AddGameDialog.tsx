@@ -3,6 +3,7 @@ import { FormMessage } from '@/components/FormMessage'
 import { GameForm } from '@/components/GameForm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toMessage } from '@/data/errors'
 import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
@@ -30,7 +31,7 @@ export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds,
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="top-[100px] max-h-[calc(100vh-120px)] translate-y-0 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add game</DialogTitle>
         </DialogHeader>
@@ -66,31 +67,22 @@ type Mode = 'create' | 'pick'
 function AddGameBody({ busy, ...props }: BodyProps) {
   const [mode, setMode] = useState<Mode>('create')
   return (
-    <div className="grid gap-4">
-      <div className="flex gap-2" role="group" aria-label="How to add a game">
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === 'create' ? 'default' : 'outline'}
-          aria-pressed={mode === 'create'}
-          disabled={busy}
-          onClick={() => setMode('create')}
-        >
+    <Tabs value={mode} onValueChange={(value) => setMode(value as Mode)}>
+      <TabsList aria-label="How to add a game">
+        <TabsTrigger value="create" disabled={busy}>
           New game
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === 'pick' ? 'default' : 'outline'}
-          aria-pressed={mode === 'pick'}
-          disabled={busy}
-          onClick={() => setMode('pick')}
-        >
+        </TabsTrigger>
+        <TabsTrigger value="pick" disabled={busy}>
           Existing game
-        </Button>
-      </div>
-      {mode === 'create' ? <CreateGame {...props} /> : <PickGame {...props} busy={busy} />}
-    </div>
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="create">
+        <CreateGame {...props} />
+      </TabsContent>
+      <TabsContent value="pick">
+        <PickGame {...props} busy={busy} />
+      </TabsContent>
+    </Tabs>
   )
 }
 
