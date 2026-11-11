@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 import { FormField } from '@/components/FormField'
 import { FormMessage } from '@/components/FormMessage'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { toMessage } from '@/data/errors'
 import type { Game, GameInput } from '@/data/types'
 import { normalizeGameCode } from '@/lib/games'
@@ -39,7 +41,7 @@ export function GameForm({ initial, usedInCampaigns = 0, onSubmit, onBusyChange,
   const [opponent, setOpponent] = useState(initial?.opponent_name ?? '')
   const [date, setDate] = useState(initial?.game_date ?? '')
   const [kickoff, setKickoff] = useState(toTimeInput(initial?.kickoff_time))
-  const [location, setLocation] = useState(initial?.location ?? '')
+  const [isHome, setIsHome] = useState(initial?.is_home ?? true)
   const [scoreOurs, setScoreOurs] = useState(initial?.score_ours?.toString() ?? '')
   const [scoreTheirs, setScoreTheirs] = useState(initial?.score_theirs?.toString() ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -78,7 +80,7 @@ export function GameForm({ initial, usedInCampaigns = 0, onSubmit, onBusyChange,
         opponent_name: opp,
         game_date: date,
         kickoff_time: fromTimeInput(kickoff),
-        location: location.trim() || null,
+        is_home: isHome,
         score_ours: ours,
         score_theirs: theirs,
       })
@@ -138,17 +140,9 @@ export function GameForm({ initial, usedInCampaigns = 0, onSubmit, onBusyChange,
             required
           />
         </div>
-        <div className="grid gap-1">
-          <FormField
-            label="Location"
-            name="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            aria-describedby="field-location-hint"
-          />
-          <p id="field-location-hint" className="text-xs text-muted-foreground">
-            Leave empty for a home game
-          </p>
+        <div className="flex items-center gap-2">
+          <Checkbox id="field-is_home" checked={isHome} onCheckedChange={(checked) => setIsHome(checked === true)} />
+          <Label htmlFor="field-is_home">Home game</Label>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField

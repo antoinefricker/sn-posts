@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toMessage } from '@/data/errors'
 import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
 import type { Game, GameInput, GameWithCampaigns } from '@/data/types'
-import { formatGameWhen } from '@/components/GameRow'
+import { formatGameWhen } from '@/lib/games'
 
 type AddGameDialogProps = {
   open: boolean

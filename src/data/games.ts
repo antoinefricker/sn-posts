@@ -12,7 +12,7 @@ type GameRowWithCampaigns = GameRow & {
 }
 
 const GAME_COLUMNS =
-  'id, created_by, code, team_name, opponent_name, game_date, kickoff_time, location, score_ours, score_theirs, created_at, updated_at, creator:profiles!created_by(name)'
+  'id, created_by, code, team_name, opponent_name, game_date, kickoff_time, is_home, score_ours, score_theirs, created_at, updated_at, creator:profiles!created_by(name)'
 const GAME_WITH_CAMPAIGNS = `${GAME_COLUMNS}, campaign_games(campaigns(id, title))`
 
 function toGame({ creator, ...row }: GameRow): Game {
@@ -34,7 +34,7 @@ function toPayload(input: GameInput): GameInput {
     opponent_name: input.opponent_name,
     game_date: input.game_date,
     kickoff_time: input.kickoff_time,
-    location: input.location,
+    is_home: input.is_home,
     score_ours: input.score_ours,
     score_theirs: input.score_theirs,
   }

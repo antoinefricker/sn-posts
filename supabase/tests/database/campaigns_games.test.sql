@@ -1,5 +1,5 @@
 begin;
-select plan(57);
+select plan(59);
 
 -- Clean slate: the tests assume an empty database (the first user goes through the public
 -- sign-up path). Everything runs in this transaction, which is rolled back at the end.
@@ -108,6 +108,8 @@ select throws_ok(
 select set_config('t.u1', (select updated_at::text from public.campaigns), true);
 select pg_sleep(0.01);
 select lives_ok($$update public.games set opponent_name = 'Rivals 2' where code = ' ab12 '$$, 'member can edit a game');
+select is((select is_home from public.games where code = ' ab12 '), true, 'a game is at home by default');
+select lives_ok($$update public.games set is_home = false where code = ' ab12 '$$, 'member can mark a game as away');
 select ok((select updated_at > current_setting('t.u1')::timestamptz from public.campaigns),
   'editing a game advances linked campaign updated_at');
 

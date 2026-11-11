@@ -78,7 +78,7 @@ On a cloud project, apply the schema and deploy the function: `make link`, `make
 
 Everything belongs to a **club**. A club has **campaigns** and **games**; a campaign groups games through the `campaign_games` link table, and the same game can appear in several campaigns.
 
-- **Game**: the **code** is the game's official code, unique within a club (compared trimmed and case-insensitively). The **team name** is the age category. **Location** left empty means the game is at home. The **score** is two optional numbers (ours and theirs, both set or both empty). Games also have an opponent, a date and a kick-off time.
+- **Game**: the **code** is the game's official code, unique within a club (compared trimmed and case-insensitively). The **team name** is the age category. **Home** says whether the game is played at home or away. The **score** is two optional numbers (ours and theirs, both set or both empty). Games also have an opponent, a date and a kick-off time.
 - **Campaign**: a title and a list of games. A campaign may be empty.
 - **Deleting**: deleting a campaign keeps its games; deleting a game removes it from every campaign it was in; deleting a user keeps what they created (shown as created by an unknown member).
 - **Who can do what**: every member of a club can create, edit and delete the club's campaigns and games, and link games to campaigns. There is no per-user ownership; only creating user accounts is limited to club admins.
