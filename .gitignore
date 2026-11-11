@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+
+# Fichiers générés par scripts/ffbb-games-to-csv.sh
+games.csv
