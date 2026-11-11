@@ -1,6 +1,7 @@
 import { Upload } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CampaignLinks } from '@/components/CampaignLinks'
+import { CreateGameDialog } from '@/components/CreateGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { ImportGamesDialog } from '@/components/ImportGamesDialog'
@@ -12,6 +13,7 @@ import type { GameWithCampaigns } from '@/data/types'
 export function GamesPage() {
   const [games, setGames] = useState<GameWithCampaigns[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
@@ -35,11 +37,15 @@ export function GamesPage() {
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Games</h1>
-        <Button variant="outline" onClick={() => setImportOpen(true)} disabled={games === null}>
-          <Upload data-icon="inline-start" />
-          Import CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)} disabled={games === null}>
+            <Upload data-icon="inline-start" />
+            Import CSV
+          </Button>
+          <Button onClick={() => setAddOpen(true)}>Add game</Button>
+        </div>
       </div>
+      <CreateGameDialog open={addOpen} onOpenChange={setAddOpen} onCreated={load} />
       <ImportGamesDialog
         open={importOpen}
         onOpenChange={setImportOpen}
@@ -58,7 +64,7 @@ export function GamesPage() {
       ) : games.length === 0 ? (
         <div className="grid gap-1">
           <p className="font-medium">No games yet</p>
-          <p className="text-sm text-muted-foreground">Games are added from a campaign page, or imported from a CSV file.</p>
+          <p className="text-sm text-muted-foreground">Add a game here, from a campaign page, or import a CSV file.</p>
         </div>
       ) : (
         <GamesTable
