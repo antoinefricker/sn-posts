@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CampaignForm } from '@/components/CampaignForm'
 import { ArrowLeft } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { toMessage } from '@/data/errors'
 import { AddGameDialog } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
@@ -138,6 +139,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           </Button>
         </div>
       </div>
+      <Separator />
       <section className="grid gap-3" aria-labelledby="games-heading">
         <div className="flex items-center justify-between gap-2">
           <h2 id="games-heading" className="text-lg font-semibold">
