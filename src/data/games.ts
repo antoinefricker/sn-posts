@@ -119,6 +119,15 @@ export async function addGameToCampaign(campaignId: string, gameId: string): Pro
   if (error) throw error
 }
 
+/** Links several games to a campaign in one request: all of them are added or none. */
+export async function addGamesToCampaign(campaignId: string, gameIds: string[]): Promise<void> {
+  if (gameIds.length === 0) return
+  const { error } = await supabase
+    .from('campaign_games')
+    .insert(gameIds.map((gameId) => ({ campaign_id: campaignId, game_id: gameId })))
+  if (error) throw error
+}
+
 export async function removeGameFromCampaign(campaignId: string, gameId: string): Promise<void> {
   const { error } = await supabase
     .from('campaign_games')

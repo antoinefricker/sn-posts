@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from 'cn'
 import { toMessage } from '@/data/errors'
-import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
+import { addGameToCampaign, addGamesToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
 import type { Game, GameInput, GameWithCampaigns } from '@/data/types'
 import { filterGamesByRange, formatGameWhen } from '@/lib/games'
 
@@ -205,6 +205,28 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
   }, [games, campaignGameIds, query, rangeStart, rangeEnd])
   const filtering = query.trim() !== '' || rangeStart !== '' || rangeEnd !== ''
 
+  const [linkingAll, setLinkingAll] = useState(false)
+
+  /** Links every game currently listed, so the filters decide which ones. */
+  async function linkAll() {
+    setLinkError(null)
+    setLinkingAll(true)
+    setBusy(true)
+    try {
+      await addGamesToCampaign(
+        campaignId,
+        candidates.map((game) => game.id),
+      )
+      onDone()
+      await onAdded()
+    } catch (e) {
+      setLinkError(toMessage(e))
+    } finally {
+      setLinkingAll(false)
+      setBusy(false)
+    }
+  }
+
   async function link(game: Game) {
     setLinkError(null)
     setLinkingId(game.id)
@@ -305,7 +327,15 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
         </div>
       )}
       <FormMessage message={linkError ? { ok: false, text: linkError } : null} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          disabled={busy || candidates.length === 0}
+          aria-busy={linkingAll}
+          onClick={() => void linkAll()}
+        >
+          {linkingAll ? 'Adding…' : `Add all games (${candidates.length})`}
+        </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Cancel
         </Button>
