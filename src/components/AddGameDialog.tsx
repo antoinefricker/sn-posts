@@ -234,7 +234,7 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="grid gap-1">
+        <div className="grid w-52 shrink-0 gap-1">
           <Label htmlFor="field-pick-range-start">From</Label>
           <Input
             id="field-pick-range-start"
@@ -244,7 +244,7 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
             onChange={(e) => setRangeStart(e.target.value)}
           />
         </div>
-        <div className="grid gap-1">
+        <div className="grid w-52 shrink-0 gap-1">
           <Label htmlFor="field-pick-range-end">To</Label>
           <Input
             id="field-pick-range-end"
@@ -254,18 +254,19 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
             onChange={(e) => setRangeEnd(e.target.value)}
           />
         </div>
-        {(rangeStart || rangeEnd) && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setRangeStart('')
-              setRangeEnd('')
-            }}
-          >
-            Clear dates
-          </Button>
-        )}
+        {/* Always rendered: showing it only when a date is set shifts the row while editing. */}
+        <Button
+          type="button"
+          variant="outline"
+          className="shrink-0"
+          disabled={!rangeStart && !rangeEnd}
+          onClick={() => {
+            setRangeStart('')
+            setRangeEnd('')
+          }}
+        >
+          Clear dates
+        </Button>
       </div>
       {loadError ? (
         <div role="alert" className="grid justify-items-start gap-2">
