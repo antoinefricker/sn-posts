@@ -10,3 +10,13 @@ export function deleteCampaignDescription(count: number): string {
 export const CAMPAIGN_STATUSES: readonly CampaignStatus[] = ['active', 'closed']
 
 export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = { active: 'Active', closed: 'Closed' }
+
+export type CampaignStatusFilter = CampaignStatus | 'all'
+
+/** Campaigns having the given status; 'all' keeps every campaign. */
+export function filterCampaignsByStatus<T extends { status: CampaignStatus }>(
+  campaigns: T[],
+  filter: CampaignStatusFilter,
+): T[] {
+  return filter === 'all' ? campaigns : campaigns.filter((campaign) => campaign.status === filter)
+}
