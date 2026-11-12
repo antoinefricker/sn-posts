@@ -157,10 +157,10 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
             Games
           </h2>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => openAdd('pick')}>
-              Existing game
+            <Button onClick={() => openAdd('pick')}>
+              Add existing game(s)
             </Button>
-            <Button onClick={() => openAdd('create')}>New game</Button>
+            <Button onClick={() => openAdd('create')}>Create and add new game</Button>
           </div>
         </div>
         {gamesError ? (
