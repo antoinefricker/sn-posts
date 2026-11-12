@@ -4,12 +4,13 @@ import { GameForm } from '@/components/GameForm'
 import { GamesTable } from '@/components/GamesTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from 'cn'
 import { toMessage } from '@/data/errors'
 import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
 import type { Game, GameInput, GameWithCampaigns } from '@/data/types'
-import { formatGameWhen } from '@/lib/games'
+import { filterGamesByRange, formatGameWhen } from '@/lib/games'
 
 export type AddGameMode = 'create' | 'pick'
 
@@ -169,6 +170,8 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
   const [loadError, setLoadError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
   const [query, setQuery] = useState('')
+  const [rangeStart, setRangeStart] = useState('')
+  const [rangeEnd, setRangeEnd] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
   const [linkingId, setLinkingId] = useState<string | null>(null)
   const requestId = useRef(0)
@@ -190,7 +193,7 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
 
   const candidates = useMemo(() => {
     const wanted = query.trim().toLowerCase()
-    return (games ?? [])
+    return filterGamesByRange(games ?? [], rangeStart, rangeEnd)
       .filter((g) => !campaignGameIds.includes(g.id))
       .filter(
         (g) =>
@@ -199,7 +202,8 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
             v.toLowerCase().includes(wanted),
           ),
       )
-  }, [games, campaignGameIds, query])
+  }, [games, campaignGameIds, query, rangeStart, rangeEnd])
+  const filtering = query.trim() !== '' || rangeStart !== '' || rangeEnd !== ''
 
   async function link(game: Game) {
     setLinkError(null)
@@ -219,13 +223,50 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
 
   return (
     <div className="grid gap-3">
-      <Input
-        type="search"
-        aria-label="Search games"
-        placeholder="Search by code, team, opponent or date"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="grid min-w-48 flex-1 gap-1">
+          <Label htmlFor="field-pick-search">Search</Label>
+          <Input
+            id="field-pick-search"
+            type="search"
+            placeholder="Code, team, opponent or date"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <div className="grid gap-1">
+          <Label htmlFor="field-pick-range-start">From</Label>
+          <Input
+            id="field-pick-range-start"
+            type="datetime-local"
+            value={rangeStart}
+            max={rangeEnd || undefined}
+            onChange={(e) => setRangeStart(e.target.value)}
+          />
+        </div>
+        <div className="grid gap-1">
+          <Label htmlFor="field-pick-range-end">To</Label>
+          <Input
+            id="field-pick-range-end"
+            type="datetime-local"
+            value={rangeEnd}
+            min={rangeStart || undefined}
+            onChange={(e) => setRangeEnd(e.target.value)}
+          />
+        </div>
+        {(rangeStart || rangeEnd) && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setRangeStart('')
+              setRangeEnd('')
+            }}
+          >
+            Clear dates
+          </Button>
+        )}
+      </div>
       {loadError ? (
         <div role="alert" className="grid justify-items-start gap-2">
           <p className="text-sm text-destructive">{loadError}</p>
@@ -244,8 +285,8 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
         <p className="text-muted-foreground">Loading games…</p>
       ) : candidates.length === 0 ? (
         <p className="text-muted-foreground">
-          {query.trim()
-            ? 'No games match your search.'
+          {filtering && games.length > 0
+            ? 'No games match your filters.'
             : games.length === 0
               ? 'No games in your club yet. Create a new game instead.'
               : 'All club games are already in this campaign.'}
