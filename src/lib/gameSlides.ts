@@ -50,3 +50,10 @@ export function paginateDays(days: DayGroup[], capacity: number = GAMES_SLIDE_RO
   flush()
   return pages
 }
+
+/** The host team goes on the left, as on the club's posts: our team at home, the opponent away. */
+export function matchupSides(game: Game, venue: GamesVenue): { left: string; right: string } {
+  return venue === 'home'
+    ? { left: game.team_name, right: game.opponent_name }
+    : { left: game.opponent_name, right: game.team_name }
+}

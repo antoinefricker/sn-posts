@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { Plane } from 'lucide-react'
 import defaultBackground from '@/assets/slide-background.svg'
 import type { Game, GamesVenue } from '@/data/types'
-import { GAMES_SLIDE_ROW_CAPACITY, type DayGroup } from '@/lib/gameSlides'
+import { GAMES_SLIDE_ROW_CAPACITY, matchupSides, type DayGroup } from '@/lib/gameSlides'
 import { formatDayLabel, formatKickoff, SLIDE_HEIGHT, venueLabel } from '@/lib/slides'
 import { SLIDE_LAVENDER, SLIDE_PURPLE } from './SlideFrame'
 
@@ -10,8 +10,9 @@ import { SLIDE_LAVENDER, SLIDE_PURPLE } from './SlideFrame'
 const ROW_HEIGHT = Math.floor(SLIDE_HEIGHT / (GAMES_SLIDE_ROW_CAPACITY + 2))
 const BAND = 'rgba(221, 211, 240, 0.6)'
 
-const TEAM_WIDTH = 340
-const OPPONENT_WIDTH = 300
+/** The left (host) column is wider, as on the club's posts. */
+const LEFT_WIDTH = 340
+const RIGHT_WIDTH = 300
 
 const NAME_SIZES = [62, 56, 50, 44, 38, 32, 26]
 const LETTER_SPACING = 2
@@ -60,12 +61,13 @@ const outlined = (color: string, stroke: string, width: number): CSSProperties =
 })
 
 function GameRow({ game, venue }: { game: Game; venue: GamesVenue }) {
+  const sides = matchupSides(game, venue)
   return (
     <div
       style={{
         height: ROW_HEIGHT,
         display: 'grid',
-        gridTemplateColumns: `80px 160px ${TEAM_WIDTH}px 90px ${OPPONENT_WIDTH}px`,
+        gridTemplateColumns: `80px 160px ${LEFT_WIDTH}px 90px ${RIGHT_WIDTH}px`,
         alignItems: 'center',
         columnGap: 10,
         textTransform: 'uppercase',
@@ -77,9 +79,9 @@ function GameRow({ game, venue }: { game: Game; venue: GamesVenue }) {
       <div style={{ fontSize: 64, transform: 'skewX(-10deg)', textAlign: 'center', ...outlined(SLIDE_LAVENDER, '#fff', 6) }}>
         {formatKickoff(game.kickoff_time)}
       </div>
-      <Name value={game.team_name} width={TEAM_WIDTH} />
+      <Name value={sides.left} width={LEFT_WIDTH} />
       <div style={{ fontSize: 76, textAlign: 'center', transform: 'skewX(-12deg)', ...outlined('transparent', SLIDE_LAVENDER, 3) }}>VS</div>
-      <Name value={game.opponent_name} width={OPPONENT_WIDTH} />
+      <Name value={sides.right} width={RIGHT_WIDTH} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Game } from '../data/types'
-import { groupGamesByDay, paginateDays, type DayGroup } from './gameSlides'
+import { groupGamesByDay, matchupSides, paginateDays, type DayGroup } from './gameSlides'
 
 let seq = 0
 function game(date: string, time: string, isHome = true): Game {
@@ -91,5 +91,15 @@ describe('paginateDays', () => {
     const expected = days.flatMap((d) => d.games.map((g) => g.id))
     const actual = paginateDays(days, 8).flatMap((p) => p.days.flatMap((d) => d.games.map((g) => g.id)))
     expect(actual).toEqual(expected)
+  })
+})
+
+describe('matchupSides', () => {
+  it('puts our team on the left at home', () => {
+    expect(matchupSides(game('2026-11-14', '14:00:00', true), 'home')).toEqual({ left: 'Us', right: 'Them' })
+  })
+
+  it('puts the host (opponent) on the left away', () => {
+    expect(matchupSides(game('2026-11-14', '14:00:00', false), 'away')).toEqual({ left: 'Them', right: 'Us' })
   })
 })
