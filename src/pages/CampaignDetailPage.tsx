@@ -149,7 +149,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           <h2 id="games-heading" className="text-lg font-semibold">
             Games
           </h2>
-          <Button onClick={() => setAddOpen(true)}>Add game</Button>
+          <Button onClick={() => setAddOpen(true)}>Add game(s)</Button>
         </div>
         {gamesError ? (
           <div role="alert" className="grid justify-items-start gap-2">

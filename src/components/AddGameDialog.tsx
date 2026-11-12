@@ -31,9 +31,9 @@ export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds,
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="top-[100px] max-h-[calc(100vh-120px)] translate-y-0 overflow-y-auto">
+      <DialogContent className="top-[100px] max-h-[calc(100vh-120px)] sm:max-w-2xl translate-y-0 overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add game</DialogTitle>
+          <DialogTitle>Add game(s)</DialogTitle>
         </DialogHeader>
         {/* Mounted only while open so state resets. */}
         {open && (
