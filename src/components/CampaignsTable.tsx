@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { CampaignStatusBadge } from '@/components/CampaignStatusBadge'
 import type { Campaign } from '@/data/types'
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -27,7 +28,7 @@ export function CampaignsTable({ campaigns, actions }: CampaignsTableProps) {
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           <tr>
-            {['Title', 'Games', 'Created', 'Updated'].map((label) => (
+            {['Title', 'Status', 'Games', 'Created', 'Updated'].map((label) => (
               <th key={label} scope="col" className={headClass}>
                 {label}
               </th>
@@ -49,6 +50,9 @@ export function CampaignsTable({ campaigns, actions }: CampaignsTableProps) {
                 >
                   {campaign.title}
                 </Link>
+              </td>
+              <td className={cellClass}>
+                <CampaignStatusBadge status={campaign.status} />
               </td>
               <td className={`${cellClass} whitespace-nowrap`}>{gamesLabel(campaign.game_count)}</td>
               <td className={`${cellClass} whitespace-nowrap`}>{formatDate(campaign.created_at)}</td>

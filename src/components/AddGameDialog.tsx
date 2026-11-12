@@ -1,26 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FormMessage } from '@/components/FormMessage'
 import { GameForm } from '@/components/GameForm'
+import { GamesTable } from '@/components/GamesTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { cn } from 'cn'
 import { toMessage } from '@/data/errors'
-import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
+import { addGameToCampaign, addGamesToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
 import type { Game, GameInput, GameWithCampaigns } from '@/data/types'
-import { formatGameWhen } from '@/lib/games'
+import { filterGamesByRange, formatGameWhen } from '@/lib/games'
+
+export type AddGameMode = 'create' | 'pick'
+
+const TITLES: Record<AddGameMode, string> = { create: 'Create and link new game', pick: 'Link existing game(s)' }
 
 type AddGameDialogProps = {
   open: boolean
+  /** 'create' makes a new game and links it; 'pick' links a game that already exists in the club. */
+  mode: AddGameMode
   onOpenChange: (open: boolean) => void
   campaignId: string
-  /** Ids of the games already in the campaign; those cannot be added again. */
+  /** Ids of the games already in the campaign; those cannot be linked again. */
   campaignGameIds: string[]
   /** Called after a game was linked, before the dialog closes. */
   onAdded: () => Promise<void> | void
 }
 
 /** Adds a game to a campaign. Closing is ignored while a save is running. */
-export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds, onAdded }: AddGameDialogProps) {
+export function AddGameDialog({ open, mode, onOpenChange, campaignId, campaignGameIds, onAdded }: AddGameDialogProps) {
   const [busy, setBusy] = useState(false)
 
   function handleOpenChange(next: boolean) {
@@ -30,13 +39,19 @@ export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds,
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className={cn(
+          'top-[100px] max-h-[calc(100vh-120px)] translate-y-0 overflow-y-auto',
+          mode === 'pick' ? 'sm:max-w-5xl' : 'sm:max-w-2xl',
+        )}
+      >
         <DialogHeader>
-          <DialogTitle>Add game</DialogTitle>
+          <DialogTitle>{TITLES[mode]}</DialogTitle>
         </DialogHeader>
         {/* Mounted only while open so state resets. */}
         {open && (
           <AddGameBody
+            mode={mode}
             campaignId={campaignId}
             campaignGameIds={campaignGameIds}
             onAdded={onAdded}
@@ -61,37 +76,8 @@ type BodyProps = {
   setBusy: (busy: boolean) => void
 }
 
-type Mode = 'create' | 'pick'
-
-function AddGameBody({ busy, ...props }: BodyProps) {
-  const [mode, setMode] = useState<Mode>('create')
-  return (
-    <div className="grid gap-4">
-      <div className="flex gap-2" role="group" aria-label="How to add a game">
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === 'create' ? 'default' : 'outline'}
-          aria-pressed={mode === 'create'}
-          disabled={busy}
-          onClick={() => setMode('create')}
-        >
-          New game
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === 'pick' ? 'default' : 'outline'}
-          aria-pressed={mode === 'pick'}
-          disabled={busy}
-          onClick={() => setMode('pick')}
-        >
-          Existing game
-        </Button>
-      </div>
-      {mode === 'create' ? <CreateGame {...props} /> : <PickGame {...props} busy={busy} />}
-    </div>
-  )
+function AddGameBody({ mode, ...props }: BodyProps & { mode: AddGameMode }) {
+  return mode === 'create' ? <CreateGame {...props} /> : <PickGame {...props} />
 }
 
 function isDuplicateCodeError(e: unknown): boolean {
@@ -165,7 +151,7 @@ function CreateGame({
           ) : (
             <div>
               <Button type="button" disabled={linking} onClick={() => void linkExisting(duplicate)}>
-                {linking ? 'Adding…' : 'Use the existing game'}
+                {linking ? 'Linking…' : 'Use the existing game'}
               </Button>
             </div>
           )}
@@ -184,6 +170,8 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
   const [loadError, setLoadError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
   const [query, setQuery] = useState('')
+  const [rangeStart, setRangeStart] = useState('')
+  const [rangeEnd, setRangeEnd] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
   const [linkingId, setLinkingId] = useState<string | null>(null)
   const requestId = useRef(0)
@@ -205,7 +193,7 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
 
   const candidates = useMemo(() => {
     const wanted = query.trim().toLowerCase()
-    return (games ?? [])
+    return filterGamesByRange(games ?? [], rangeStart, rangeEnd)
       .filter((g) => !campaignGameIds.includes(g.id))
       .filter(
         (g) =>
@@ -214,7 +202,30 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
             v.toLowerCase().includes(wanted),
           ),
       )
-  }, [games, campaignGameIds, query])
+  }, [games, campaignGameIds, query, rangeStart, rangeEnd])
+  const filtering = query.trim() !== '' || rangeStart !== '' || rangeEnd !== ''
+
+  const [linkingAll, setLinkingAll] = useState(false)
+
+  /** Links every game currently listed, so the filters decide which ones. */
+  async function linkAll() {
+    setLinkError(null)
+    setLinkingAll(true)
+    setBusy(true)
+    try {
+      await addGamesToCampaign(
+        campaignId,
+        candidates.map((game) => game.id),
+      )
+      onDone()
+      await onAdded()
+    } catch (e) {
+      setLinkError(toMessage(e))
+    } finally {
+      setLinkingAll(false)
+      setBusy(false)
+    }
+  }
 
   async function link(game: Game) {
     setLinkError(null)
@@ -234,13 +245,51 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
 
   return (
     <div className="grid gap-3">
-      <Input
-        type="search"
-        aria-label="Search games"
-        placeholder="Search by code, team, opponent or date"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="grid min-w-48 flex-1 gap-1">
+          <Label htmlFor="field-pick-search">Search</Label>
+          <Input
+            id="field-pick-search"
+            type="search"
+            placeholder="Code, team, opponent or date"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <div className="grid w-52 shrink-0 gap-1">
+          <Label htmlFor="field-pick-range-start">From</Label>
+          <Input
+            id="field-pick-range-start"
+            type="datetime-local"
+            value={rangeStart}
+            max={rangeEnd || undefined}
+            onChange={(e) => setRangeStart(e.target.value)}
+          />
+        </div>
+        <div className="grid w-52 shrink-0 gap-1">
+          <Label htmlFor="field-pick-range-end">To</Label>
+          <Input
+            id="field-pick-range-end"
+            type="datetime-local"
+            value={rangeEnd}
+            min={rangeStart || undefined}
+            onChange={(e) => setRangeEnd(e.target.value)}
+          />
+        </div>
+        {/* Always rendered: showing it only when a date is set shifts the row while editing. */}
+        <Button
+          type="button"
+          variant="outline"
+          className="shrink-0"
+          disabled={!rangeStart && !rangeEnd}
+          onClick={() => {
+            setRangeStart('')
+            setRangeEnd('')
+          }}
+        >
+          Clear dates
+        </Button>
+      </div>
       {loadError ? (
         <div role="alert" className="grid justify-items-start gap-2">
           <p className="text-sm text-destructive">{loadError}</p>
@@ -259,31 +308,34 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
         <p className="text-muted-foreground">Loading games…</p>
       ) : candidates.length === 0 ? (
         <p className="text-muted-foreground">
-          {query.trim()
-            ? 'No games match your search.'
+          {filtering && games.length > 0
+            ? 'No games match your filters.'
             : games.length === 0
               ? 'No games in your club yet. Create a new game instead.'
               : 'All club games are already in this campaign.'}
         </p>
       ) : (
-        <ul className="grid max-h-72 gap-2 overflow-y-auto">
-          {candidates.map((game) => (
-            <li key={game.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
-              <div className="grid min-w-0 text-sm">
-                <span className="font-medium">
-                  {game.code} · {game.team_name} vs {game.opponent_name}
-                </span>
-                <span className="text-muted-foreground">{formatGameWhen(game)}</span>
-              </div>
+        <div className="max-h-96 overflow-y-auto">
+          <GamesTable
+            games={candidates}
+            actions={(game) => (
               <Button type="button" size="sm" disabled={busy} onClick={() => void link(game)}>
-                {linkingId === game.id ? 'Adding…' : 'Add'}
+                {linkingId === game.id ? 'Linking…' : 'Link'}
               </Button>
-            </li>
-          ))}
-        </ul>
+            )}
+          />
+        </div>
       )}
       <FormMessage message={linkError ? { ok: false, text: linkError } : null} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          disabled={busy || candidates.length === 0}
+          aria-busy={linkingAll}
+          onClick={() => void linkAll()}
+        >
+          {linkingAll ? 'Linking…' : `Link all games (${candidates.length})`}
+        </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Cancel
         </Button>

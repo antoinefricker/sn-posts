@@ -2,17 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CampaignForm } from '@/components/CampaignForm'
-import { Button } from '@/components/ui/button'
+import { CampaignStatusBadge } from '@/components/CampaignStatusBadge'
+import { ArrowLeft } from 'lucide-react'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { toMessage } from '@/data/errors'
-import { AddGameDialog } from '@/components/AddGameDialog'
+import { AddGameDialog, type AddGameMode } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
-import { listCampaignGames } from '@/data/games'
+import { listCampaignGames, removeAllGamesFromCampaign } from '@/data/games'
 import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
-import type { GameWithCampaigns, Campaign } from '@/data/types'
-import { deleteCampaignDescription } from '@/lib/campaigns'
+import type { GameWithCampaigns, Campaign, CampaignInput } from '@/data/types'
+import { deleteCampaignDescription, unlinkAllGamesDescription } from '@/lib/campaigns'
 
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+const dateFormat = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
 type CampaignState =
   | { status: 'loading' }
@@ -31,7 +34,10 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
   const [state, setState] = useState<CampaignState>({ status: 'loading' })
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [unlinkAllOpen, setUnlinkAllOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  // Kept after closing so the dialog does not change content during its close animation.
+  const [addMode, setAddMode] = useState<AddGameMode>('create')
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -97,8 +103,13 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
 
   const { campaign } = state
 
-  async function handleEdit(title: string) {
-    await updateCampaign(campaign.id, title)
+  function openAdd(mode: AddGameMode) {
+    setAddMode(mode)
+    setAddOpen(true)
+  }
+
+  async function handleEdit(input: CampaignInput) {
+    await updateCampaign(campaign.id, input)
     setEditOpen(false)
     await refresh()
   }
@@ -111,16 +122,25 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
 
   return (
     <div className="grid gap-4">
-      <Link to="/campaigns" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-        Campaigns
-      </Link>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold">{campaign.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {campaign.creator_name ?? 'Unknown member'} · Created {dateFormat.format(new Date(campaign.created_at))}{' '}
-            · Updated {dateFormat.format(new Date(campaign.updated_at))}
-          </p>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/campaigns"
+            aria-label="Back to campaigns"
+            className={buttonVariants({ variant: 'outline', size: 'icon-lg' })}
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+          <div className="grid gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold">{campaign.title}</h1>
+              <CampaignStatusBadge status={campaign.status} />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Created {dateFormat.format(new Date(campaign.created_at))} by{' '}
+              {campaign.creator_name ?? 'Unknown member'} · Updated {dateFormat.format(new Date(campaign.updated_at))}
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setEditOpen(true)}>
@@ -131,12 +151,25 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           </Button>
         </div>
       </div>
+      <Separator />
       <section className="grid gap-3" aria-labelledby="games-heading">
         <div className="flex items-center justify-between gap-2">
           <h2 id="games-heading" className="text-lg font-semibold">
             Games
           </h2>
-          <Button onClick={() => setAddOpen(true)}>Add game</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => openAdd('pick')}>
+              Link existing game(s)
+            </Button>
+            <Button onClick={() => openAdd('create')}>Create and link new game</Button>
+            <Button
+              variant="outline"
+              disabled={!games || games.length === 0}
+              onClick={() => setUnlinkAllOpen(true)}
+            >
+              Unlink all games
+            </Button>
+          </div>
         </div>
         {gamesError ? (
           <div role="alert" className="grid justify-items-start gap-2">
@@ -158,12 +191,25 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
       </section>
       <AddGameDialog
         open={addOpen}
+        mode={addMode}
         onOpenChange={setAddOpen}
         campaignId={campaign.id}
         campaignGameIds={games?.map((g) => g.id) ?? []}
         onAdded={refresh}
       />
       <CampaignForm open={editOpen} onOpenChange={setEditOpen} initial={campaign} onSubmit={handleEdit} />
+      <ConfirmDialog
+        open={unlinkAllOpen}
+        onOpenChange={setUnlinkAllOpen}
+        title={`Unlink all ${games?.length ?? 0} games?`}
+        description={unlinkAllGamesDescription(games?.length ?? 0)}
+        confirmLabel="Unlink all games"
+        onConfirm={async () => {
+          await removeAllGamesFromCampaign(campaign.id)
+          setUnlinkAllOpen(false)
+          await refresh()
+        }}
+      />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
