@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FormMessage } from '@/components/FormMessage'
 import { GameForm } from '@/components/GameForm'
+import { GamesTable } from '@/components/GamesTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { cn } from 'cn'
 import { toMessage } from '@/data/errors'
 import { addGameToCampaign, createGame, findGameByCode, listGames } from '@/data/games'
 import type { Game, GameInput, GameWithCampaigns } from '@/data/types'
 import { formatGameWhen } from '@/lib/games'
 
+export type AddGameMode = 'create' | 'pick'
+
+const TITLES: Record<AddGameMode, string> = { create: 'New game', pick: 'Add an existing game' }
+
 type AddGameDialogProps = {
   open: boolean
+  /** 'create' makes a new game and links it; 'pick' links a game that already exists in the club. */
+  mode: AddGameMode
   onOpenChange: (open: boolean) => void
   campaignId: string
   /** Ids of the games already in the campaign; those cannot be added again. */
@@ -21,7 +28,7 @@ type AddGameDialogProps = {
 }
 
 /** Adds a game to a campaign. Closing is ignored while a save is running. */
-export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds, onAdded }: AddGameDialogProps) {
+export function AddGameDialog({ open, mode, onOpenChange, campaignId, campaignGameIds, onAdded }: AddGameDialogProps) {
   const [busy, setBusy] = useState(false)
 
   function handleOpenChange(next: boolean) {
@@ -31,13 +38,19 @@ export function AddGameDialog({ open, onOpenChange, campaignId, campaignGameIds,
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="top-[100px] max-h-[calc(100vh-120px)] sm:max-w-2xl translate-y-0 overflow-y-auto">
+      <DialogContent
+        className={cn(
+          'top-[100px] max-h-[calc(100vh-120px)] translate-y-0 overflow-y-auto',
+          mode === 'pick' ? 'sm:max-w-5xl' : 'sm:max-w-2xl',
+        )}
+      >
         <DialogHeader>
-          <DialogTitle>Add game(s)</DialogTitle>
+          <DialogTitle>{TITLES[mode]}</DialogTitle>
         </DialogHeader>
         {/* Mounted only while open so state resets. */}
         {open && (
           <AddGameBody
+            mode={mode}
             campaignId={campaignId}
             campaignGameIds={campaignGameIds}
             onAdded={onAdded}
@@ -62,28 +75,8 @@ type BodyProps = {
   setBusy: (busy: boolean) => void
 }
 
-type Mode = 'create' | 'pick'
-
-function AddGameBody({ busy, ...props }: BodyProps) {
-  const [mode, setMode] = useState<Mode>('create')
-  return (
-    <Tabs value={mode} onValueChange={(value) => setMode(value as Mode)}>
-      <TabsList aria-label="How to add a game">
-        <TabsTrigger value="create" disabled={busy}>
-          New game
-        </TabsTrigger>
-        <TabsTrigger value="pick" disabled={busy}>
-          Existing game
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="create">
-        <CreateGame {...props} />
-      </TabsContent>
-      <TabsContent value="pick">
-        <PickGame {...props} busy={busy} />
-      </TabsContent>
-    </Tabs>
-  )
+function AddGameBody({ mode, ...props }: BodyProps & { mode: AddGameMode }) {
+  return mode === 'create' ? <CreateGame {...props} /> : <PickGame {...props} />
 }
 
 function isDuplicateCodeError(e: unknown): boolean {
@@ -258,21 +251,16 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
               : 'All club games are already in this campaign.'}
         </p>
       ) : (
-        <ul className="grid max-h-72 gap-2 overflow-y-auto">
-          {candidates.map((game) => (
-            <li key={game.id} className="flex items-center justify-between gap-2 rounded-md border p-2">
-              <div className="grid min-w-0 text-sm">
-                <span className="font-medium">
-                  {game.code} · {game.team_name} vs {game.opponent_name}
-                </span>
-                <span className="text-muted-foreground">{formatGameWhen(game)}</span>
-              </div>
+        <div className="max-h-96 overflow-y-auto">
+          <GamesTable
+            games={candidates}
+            actions={(game) => (
               <Button type="button" size="sm" disabled={busy} onClick={() => void link(game)}>
                 {linkingId === game.id ? 'Adding…' : 'Add'}
               </Button>
-            </li>
-          ))}
-        </ul>
+            )}
+          />
+        </div>
       )}
       <FormMessage message={linkError ? { ok: false, text: linkError } : null} />
       <div className="flex justify-end">

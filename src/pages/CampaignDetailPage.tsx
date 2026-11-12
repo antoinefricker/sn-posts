@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { toMessage } from '@/data/errors'
-import { AddGameDialog } from '@/components/AddGameDialog'
+import { AddGameDialog, type AddGameMode } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { listCampaignGames } from '@/data/games'
@@ -35,6 +35,8 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
+  // Kept after closing so the dialog does not change content during its close animation.
+  const [addMode, setAddMode] = useState<AddGameMode>('create')
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -100,6 +102,11 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
 
   const { campaign } = state
 
+  function openAdd(mode: AddGameMode) {
+    setAddMode(mode)
+    setAddOpen(true)
+  }
+
   async function handleEdit(input: CampaignInput) {
     await updateCampaign(campaign.id, input)
     setEditOpen(false)
@@ -149,7 +156,12 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           <h2 id="games-heading" className="text-lg font-semibold">
             Games
           </h2>
-          <Button onClick={() => setAddOpen(true)}>Add game(s)</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => openAdd('pick')}>
+              Existing game
+            </Button>
+            <Button onClick={() => openAdd('create')}>New game</Button>
+          </div>
         </div>
         {gamesError ? (
           <div role="alert" className="grid justify-items-start gap-2">
@@ -171,6 +183,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
       </section>
       <AddGameDialog
         open={addOpen}
+        mode={addMode}
         onOpenChange={setAddOpen}
         campaignId={campaign.id}
         campaignGameIds={games?.map((g) => g.id) ?? []}
