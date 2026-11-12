@@ -1,5 +1,5 @@
 begin;
-select plan(59);
+select plan(65);
 
 -- Clean slate: the tests assume an empty database (the first user goes through the public
 -- sign-up path). Everything runs in this transaction, which is rolled back at the end.
@@ -44,6 +44,12 @@ select lives_ok(
 select is((select club_id from public.campaigns), :'club_a'::uuid, 'campaign club_id defaults to the member club');
 select is((select created_by from public.campaigns), :'m1'::uuid, 'campaign created_by defaults to the member');
 select is((select count(*)::int from public.campaign_games), 0, 'a campaign with no games is valid');
+select is((select status from public.campaigns), 'active', 'a campaign is active by default');
+select throws_ok($$insert into public.campaigns (title, status) values ('X', 'archived')$$, '23514', null, 'unknown campaign status rejected');
+select lives_ok($$update public.campaigns set status = 'closed'$$, 'member can close a campaign');
+select is((select status from public.campaigns), 'closed', 'campaign status is updated');
+select throws_ok($$update public.campaigns set status = 'archived'$$, '23514', null, 'cannot set an unknown status');
+select lives_ok($$update public.campaigns set status = 'active'$$, 'member can reopen a campaign');
 select throws_ok($$insert into public.campaigns (title) values ('   ')$$, '23514', null, 'blank campaign title rejected');
 select throws_ok(
   $$insert into public.campaigns (title, created_by) values ('X', '00000000-0000-0000-0000-0000000000a1')$$,

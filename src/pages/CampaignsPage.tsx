@@ -10,7 +10,7 @@ import { createCampaign, deleteCampaign, listCampaigns, updateCampaign } from '@
 import { toMessage } from '@/data/errors'
 import { deleteCampaignDescription } from '@/lib/campaigns'
 import { paginate } from '@/lib/pagination'
-import type { Campaign } from '@/data/types'
+import type { Campaign, CampaignInput } from '@/data/types'
 
 const PAGE_SIZE = 20
 
@@ -55,9 +55,9 @@ export function CampaignsPage() {
     setFormOpen(true)
   }
 
-  async function handleSubmit(title: string) {
-    if (editing) await updateCampaign(editing.id, title)
-    else await createCampaign(title)
+  async function handleSubmit(input: CampaignInput) {
+    if (editing) await updateCampaign(editing.id, input)
+    else await createCampaign(input.title)
     setFormOpen(false)
     await load()
   }

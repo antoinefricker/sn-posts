@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CampaignForm } from '@/components/CampaignForm'
+import { CampaignStatusBadge } from '@/components/CampaignStatusBadge'
 import { ArrowLeft } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -11,7 +12,7 @@ import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
 import { listCampaignGames } from '@/data/games'
 import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
-import type { GameWithCampaigns, Campaign } from '@/data/types'
+import type { GameWithCampaigns, Campaign, CampaignInput } from '@/data/types'
 import { deleteCampaignDescription } from '@/lib/campaigns'
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -99,8 +100,8 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
 
   const { campaign } = state
 
-  async function handleEdit(title: string) {
-    await updateCampaign(campaign.id, title)
+  async function handleEdit(input: CampaignInput) {
+    await updateCampaign(campaign.id, input)
     setEditOpen(false)
     await refresh()
   }
@@ -123,7 +124,10 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
             <ArrowLeft className="size-5" />
           </Link>
           <div className="grid gap-1">
-            <h1 className="text-2xl font-semibold">{campaign.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold">{campaign.title}</h1>
+              <CampaignStatusBadge status={campaign.status} />
+            </div>
             <p className="text-sm text-muted-foreground">
               Created {dateFormat.format(new Date(campaign.created_at))} by{' '}
               {campaign.creator_name ?? 'Unknown member'} · Updated {dateFormat.format(new Date(campaign.updated_at))}

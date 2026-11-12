@@ -1,6 +1,14 @@
+export type CampaignStatus = 'active' | 'closed'
+
+export type CampaignInput = {
+  title: string
+  status: CampaignStatus
+}
+
 export type Campaign = {
   id: string
   title: string
+  status: CampaignStatus
   created_at: string
   updated_at: string
   created_by: string | null

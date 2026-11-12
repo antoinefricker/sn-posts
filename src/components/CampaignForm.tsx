@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 import { FormField } from '@/components/FormField'
 import { FormMessage } from '@/components/FormMessage'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { NativeSelect } from '@/components/ui/native-select'
 import {
   Dialog,
   DialogContent,
@@ -10,13 +12,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { toMessage } from '@/data/errors'
-import type { Campaign } from '@/data/types'
+import type { Campaign, CampaignInput, CampaignStatus } from '@/data/types'
+import { CAMPAIGN_STATUSES, CAMPAIGN_STATUS_LABELS } from '@/lib/campaigns'
 
 type CampaignFormProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   initial?: Campaign
-  onSubmit: (title: string) => Promise<void>
+  onSubmit: (input: CampaignInput) => Promise<void>
 }
 
 /** Create/edit dialog. Closing is the caller's job after a successful onSubmit. */
@@ -59,12 +62,13 @@ function CampaignFormBody({
   setBusy,
 }: {
   initial?: Campaign
-  onSubmit: (title: string) => Promise<void>
+  onSubmit: (input: CampaignInput) => Promise<void>
   onCancel: () => void
   busy: boolean
   setBusy: (busy: boolean) => void
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
+  const [status, setStatus] = useState<CampaignStatus>(initial?.status ?? 'active')
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
@@ -78,7 +82,7 @@ function CampaignFormBody({
     setError(null)
     setBusy(true)
     try {
-      await onSubmit(trimmed)
+      await onSubmit({ title: trimmed, status })
     } catch (e) {
       setError(toMessage(e))
     } finally {
@@ -96,6 +100,23 @@ function CampaignFormBody({
         required
         autoFocus
       />
+      {initial && (
+        <div className="grid gap-2">
+          <Label htmlFor="field-campaign_status">Status</Label>
+          <NativeSelect
+            id="field-campaign_status"
+            name="campaign_status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as CampaignStatus)}
+          >
+            {CAMPAIGN_STATUSES.map((value) => (
+              <option key={value} value={value}>
+                {CAMPAIGN_STATUS_LABELS[value]}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
       <FormMessage message={error ? { ok: false, text: error } : null} />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>

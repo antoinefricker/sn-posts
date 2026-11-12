@@ -1,5 +1,5 @@
 import { supabase } from '@/supabase'
-import type { Campaign } from './types'
+import type { Campaign, CampaignInput } from './types'
 
 type CampaignRow = Omit<Campaign, 'creator_name' | 'game_count'> & {
   creator: { name: string | null } | null
@@ -7,7 +7,7 @@ type CampaignRow = Omit<Campaign, 'creator_name' | 'game_count'> & {
 }
 
 const CAMPAIGN_COLUMNS =
-  'id, created_by, title, created_at, updated_at, creator:profiles!created_by(name), campaign_games(count)'
+  'id, created_by, title, status, created_at, updated_at, creator:profiles!created_by(name), campaign_games(count)'
 
 function toCampaign({ creator, campaign_games, ...row }: CampaignRow): Campaign {
   return { ...row, creator_name: creator?.name ?? null, game_count: campaign_games[0]?.count ?? 0 }
@@ -49,10 +49,10 @@ export async function createCampaign(title: string): Promise<Campaign> {
   return toCampaign(data)
 }
 
-export async function updateCampaign(id: string, title: string): Promise<Campaign> {
+export async function updateCampaign(id: string, input: CampaignInput): Promise<Campaign> {
   const { data, error } = await supabase
     .from('campaigns')
-    .update({ title: requireTitle(title) })
+    .update({ title: requireTitle(input.title), status: input.status })
     .eq('id', id)
     .select(CAMPAIGN_COLUMNS)
     .single<CampaignRow>()
