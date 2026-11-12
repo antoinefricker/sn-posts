@@ -1,5 +1,5 @@
 begin;
-select plan(26);
+select plan(38);
 
 -- Clean slate: the tests assume an empty database (the first user goes through the public
 -- sign-up path). Everything runs in this transaction, which is rolled back at the end.
@@ -140,6 +140,44 @@ select is(
 
 select lives_ok($$delete from public.campaigns$$, 'member can delete a campaign');
 select is((select count(*)::int from public.campaign_templates), 0, 'deleting the campaign deletes its templates');
+
+-- Storage: template-images (direct deletes need the storage.allow_delete_query opt-in in tests).
+select set_config('storage.allow_delete_query', 'true', true);
+select lives_ok(
+  format($$insert into storage.objects (bucket_id, name) values ('template-images', %L)$$, :'club_a' || '/img-1.png'),
+  'member can upload under their club folder');
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('template-images', '00000000-0000-0000-0000-0000000000c2/img-2.png')$$,
+  '42501', null, 'member cannot upload under another club folder');
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name) values ('template-images', 'root.png')$$,
+  '42501', null, 'member cannot upload at the bucket root');
+select is((select count(*)::int from storage.objects where bucket_id = 'template-images'), 1,
+  'member sees their club objects');
+
+select set_config('request.jwt.claims', json_build_object('sub', :'m2', 'role', 'authenticated')::text, true);
+select is((select count(*)::int from storage.objects where bucket_id = 'template-images'), 0,
+  'club B sees no club A objects');
+select lives_ok($$delete from storage.objects where bucket_id = 'template-images'$$,
+  'club B delete of club A objects is a no-op');
+
+select set_config('request.jwt.claims', json_build_object('sub', :'m1', 'role', 'authenticated')::text, true);
+select is((select count(*)::int from storage.objects where bucket_id = 'template-images'), 1,
+  'club A object survived club B delete');
+select lives_ok($$delete from storage.objects where bucket_id = 'template-images'$$,
+  'member can delete their club objects');
+select is((select count(*)::int from storage.objects where bucket_id = 'template-images'), 0,
+  'object is deleted');
+
+reset role;
+select ok(exists (select 1 from storage.buckets where id = 'template-images' and not public),
+  'template-images bucket exists and is private');
+select is((select file_size_limit from storage.buckets where id = 'template-images'), 5242880::bigint,
+  'bucket size limit is 5 MiB');
+select is((select array_agg(m order by m) from storage.buckets, unnest(allowed_mime_types) m
+  where id = 'template-images'), array['image/jpeg', 'image/png', 'image/webp'],
+  'bucket allows png, jpeg and webp only');
 
 select * from finish();
 rollback;
