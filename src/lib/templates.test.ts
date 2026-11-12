@@ -18,6 +18,13 @@ describe('validateConfig', () => {
 
   it('validates intro', () => {
     expect(validateConfig('intro', { ...intro, title: '  ' })).toBe('Title is required')
+    expect(validateConfig('intro', { ...intro, title: 'x'.repeat(61) })).toBe(
+      'Title must be 60 characters or fewer',
+    )
+    expect(validateConfig('intro', { ...intro, subtitle: 'x'.repeat(101) })).toBe(
+      'Subtitle must be 100 characters or fewer',
+    )
+    expect(validateConfig('intro', { ...intro, title: 'x'.repeat(60), subtitle: 'x'.repeat(100) })).toBeNull()
     expect(validateConfig('intro', intro)).toBeNull()
   })
 
@@ -28,6 +35,9 @@ describe('validateConfig', () => {
     )
     expect(validateConfig('focus', { ...focus, title: ' ' })).toBe('Title is required')
     expect(validateConfig('focus', { ...focus, image_path: null })).toBe('Image is required')
+    expect(validateConfig('focus', { ...focus, title: 'x'.repeat(61) })).toBe(
+      'Title must be 60 characters or fewer',
+    )
     expect(validateConfig('focus', focus)).toBeNull()
   })
 

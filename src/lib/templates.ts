@@ -14,7 +14,10 @@ export const TEMPLATE_TYPE_LABELS: Record<TemplateType, string> = {
   games: 'Games',
 }
 
-const BADGE_MAX_LENGTH = 20
+export const INTRO_TITLE_MAX_LENGTH = 60
+export const INTRO_SUBTITLE_MAX_LENGTH = 100
+export const FOCUS_TITLE_MAX_LENGTH = 60
+export const BADGE_MAX_LENGTH = 20
 
 /** Empty config for a newly created template of the given type. */
 export function defaultConfig(type: TemplateType): TemplateConfig {
@@ -32,15 +35,24 @@ export function defaultConfig(type: TemplateType): TemplateConfig {
 export function validateConfig(type: TemplateType, config: TemplateConfig): string | null {
   switch (type) {
     case 'intro': {
-      const { title } = config as IntroConfig
-      return title.trim() === '' ? 'Title is required' : null
+      const { title, subtitle } = config as IntroConfig
+      const trimmedTitle = title.trim()
+      if (trimmedTitle === '') return 'Title is required'
+      if (trimmedTitle.length > INTRO_TITLE_MAX_LENGTH)
+        return `Title must be ${INTRO_TITLE_MAX_LENGTH} characters or fewer`
+      if (subtitle.trim().length > INTRO_SUBTITLE_MAX_LENGTH)
+        return `Subtitle must be ${INTRO_SUBTITLE_MAX_LENGTH} characters or fewer`
+      return null
     }
     case 'focus': {
       const { badge, title, image_path } = config as FocusConfig
       const trimmedBadge = badge.trim()
       if (trimmedBadge === '') return 'Badge is required'
       if (trimmedBadge.length > BADGE_MAX_LENGTH) return `Badge must be ${BADGE_MAX_LENGTH} characters or fewer`
-      if (title.trim() === '') return 'Title is required'
+      const trimmedTitle = title.trim()
+      if (trimmedTitle === '') return 'Title is required'
+      if (trimmedTitle.length > FOCUS_TITLE_MAX_LENGTH)
+        return `Title must be ${FOCUS_TITLE_MAX_LENGTH} characters or fewer`
       if (!image_path) return 'Image is required'
       return null
     }
