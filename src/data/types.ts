@@ -38,3 +38,30 @@ export type Game = GameInput & {
 export type GameWithCampaigns = Game & {
   campaigns: { id: string; title: string }[]
 }
+
+export type TemplateType = 'intro' | 'focus' | 'games'
+
+export type GamesVenue = 'home' | 'away'
+
+export type IntroConfig = { background_path: string | null; title: string; subtitle: string }
+
+export type FocusConfig = { badge: string; title: string; image_path: string | null }
+
+export type GamesConfig = { venue: GamesVenue }
+
+type CampaignTemplateBase = {
+  id: string
+  campaign_id: string
+  position: number
+  created_at: string
+  updated_at: string
+}
+
+export type CampaignTemplate = CampaignTemplateBase &
+  (
+    | { type: 'intro'; config: IntroConfig }
+    | { type: 'focus'; config: FocusConfig }
+    | { type: 'games'; config: GamesConfig }
+  )
+
+export type TemplateConfig = IntroConfig | FocusConfig | GamesConfig
