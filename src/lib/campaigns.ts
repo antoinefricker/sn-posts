@@ -20,3 +20,9 @@ export function filterCampaignsByStatus<T extends { status: CampaignStatus }>(
 ): T[] {
   return filter === 'all' ? campaigns : campaigns.filter((campaign) => campaign.status === filter)
 }
+
+/** Confirmation text for unlinking every game of a campaign; the games are never deleted. */
+export function unlinkAllGamesDescription(count: number): string {
+  const games = count === 1 ? 'Removes the 1 game' : `Removes all ${count} games`
+  return `${games} from this campaign. They stay in the club and can be linked again.`
+}

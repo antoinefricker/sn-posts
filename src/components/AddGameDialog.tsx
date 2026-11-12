@@ -14,7 +14,7 @@ import { filterGamesByRange, formatGameWhen } from '@/lib/games'
 
 export type AddGameMode = 'create' | 'pick'
 
-const TITLES: Record<AddGameMode, string> = { create: 'New game', pick: 'Add an existing game' }
+const TITLES: Record<AddGameMode, string> = { create: 'Create and link new game', pick: 'Link existing game(s)' }
 
 type AddGameDialogProps = {
   open: boolean
@@ -22,7 +22,7 @@ type AddGameDialogProps = {
   mode: AddGameMode
   onOpenChange: (open: boolean) => void
   campaignId: string
-  /** Ids of the games already in the campaign; those cannot be added again. */
+  /** Ids of the games already in the campaign; those cannot be linked again. */
   campaignGameIds: string[]
   /** Called after a game was linked, before the dialog closes. */
   onAdded: () => Promise<void> | void
@@ -151,7 +151,7 @@ function CreateGame({
           ) : (
             <div>
               <Button type="button" disabled={linking} onClick={() => void linkExisting(duplicate)}>
-                {linking ? 'Adding…' : 'Use the existing game'}
+                {linking ? 'Linking…' : 'Use the existing game'}
               </Button>
             </div>
           )}
@@ -320,7 +320,7 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
             games={candidates}
             actions={(game) => (
               <Button type="button" size="sm" disabled={busy} onClick={() => void link(game)}>
-                {linkingId === game.id ? 'Adding…' : 'Add'}
+                {linkingId === game.id ? 'Linking…' : 'Link'}
               </Button>
             )}
           />
@@ -334,7 +334,7 @@ function PickGame({ campaignId, campaignGameIds, onAdded, onDone, onCancel, busy
           aria-busy={linkingAll}
           onClick={() => void linkAll()}
         >
-          {linkingAll ? 'Adding…' : `Add all games (${candidates.length})`}
+          {linkingAll ? 'Linking…' : `Link all games (${candidates.length})`}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Cancel

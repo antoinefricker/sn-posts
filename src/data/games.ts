@@ -128,6 +128,12 @@ export async function addGamesToCampaign(campaignId: string, gameIds: string[]):
   if (error) throw error
 }
 
+/** Removes every link of a campaign; the games themselves stay in the club. */
+export async function removeAllGamesFromCampaign(campaignId: string): Promise<void> {
+  const { error } = await supabase.from('campaign_games').delete().eq('campaign_id', campaignId)
+  if (error) throw error
+}
+
 export async function removeGameFromCampaign(campaignId: string, gameId: string): Promise<void> {
   const { error } = await supabase
     .from('campaign_games')

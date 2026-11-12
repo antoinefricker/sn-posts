@@ -10,10 +10,10 @@ import { toMessage } from '@/data/errors'
 import { AddGameDialog, type AddGameMode } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
-import { listCampaignGames } from '@/data/games'
+import { listCampaignGames, removeAllGamesFromCampaign } from '@/data/games'
 import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
 import type { GameWithCampaigns, Campaign, CampaignInput } from '@/data/types'
-import { deleteCampaignDescription } from '@/lib/campaigns'
+import { deleteCampaignDescription, unlinkAllGamesDescription } from '@/lib/campaigns'
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -34,6 +34,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
   const [state, setState] = useState<CampaignState>({ status: 'loading' })
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [unlinkAllOpen, setUnlinkAllOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
   // Kept after closing so the dialog does not change content during its close animation.
   const [addMode, setAddMode] = useState<AddGameMode>('create')
@@ -158,9 +159,16 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           </h2>
           <div className="flex gap-2">
             <Button onClick={() => openAdd('pick')}>
-              Add existing game(s)
+              Link existing game(s)
             </Button>
-            <Button onClick={() => openAdd('create')}>Create and add new game</Button>
+            <Button onClick={() => openAdd('create')}>Create and link new game</Button>
+            <Button
+              variant="outline"
+              disabled={!games || games.length === 0}
+              onClick={() => setUnlinkAllOpen(true)}
+            >
+              Unlink all games
+            </Button>
           </div>
         </div>
         {gamesError ? (
@@ -190,6 +198,18 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
         onAdded={refresh}
       />
       <CampaignForm open={editOpen} onOpenChange={setEditOpen} initial={campaign} onSubmit={handleEdit} />
+      <ConfirmDialog
+        open={unlinkAllOpen}
+        onOpenChange={setUnlinkAllOpen}
+        title={`Unlink all ${games?.length ?? 0} games?`}
+        description={unlinkAllGamesDescription(games?.length ?? 0)}
+        confirmLabel="Unlink all games"
+        onConfirm={async () => {
+          await removeAllGamesFromCampaign(campaign.id)
+          setUnlinkAllOpen(false)
+          await refresh()
+        }}
+      />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

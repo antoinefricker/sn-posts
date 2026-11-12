@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterCampaignsByStatus } from './campaigns'
+import { filterCampaignsByStatus, unlinkAllGamesDescription } from './campaigns'
 
 describe('filterCampaignsByStatus', () => {
   const campaigns = [
@@ -15,5 +15,14 @@ describe('filterCampaignsByStatus', () => {
   it('keeps only the campaigns with the given status', () => {
     expect(filterCampaignsByStatus(campaigns, 'active').map((c) => c.id)).toEqual(['a', 'c'])
     expect(filterCampaignsByStatus(campaigns, 'closed').map((c) => c.id)).toEqual(['b'])
+  })
+})
+
+describe('unlinkAllGamesDescription', () => {
+  it('says the games stay in the club', () => {
+    expect(unlinkAllGamesDescription(1)).toBe(
+      'Removes the 1 game from this campaign. They stay in the club and can be linked again.',
+    )
+    expect(unlinkAllGamesDescription(3)).toContain('Removes all 3 games')
   })
 })
