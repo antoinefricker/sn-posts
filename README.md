@@ -97,6 +97,10 @@ Everything belongs to a **club**. A club has **campaigns** and **games**; a camp
 
 Tests: `make test` runs the Vitest unit tests, `make db-test` runs the pgTAP tests for clubs, campaigns and games (see the command table above).
 
+## Campaign templates
+
+A campaign has an ordered list of templates (Intro, Focus, Games) that become 1080×1350 feed slides. Games templates are filled from the campaign's games, one slide per page, for home or away. Background and focus images are uploaded to the private `template-images` Supabase Storage bucket and are scoped to the club. Apply the migrations that create the tables and the bucket with `make db-reset` (local). Slides are rendered and exported as PNG in the browser (Download / Download all in the Slides preview), nothing is generated server-side.
+
 ## Deploying to Vercel
 
 ### Prerequisites

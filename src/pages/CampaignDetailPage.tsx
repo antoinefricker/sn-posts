@@ -10,6 +10,7 @@ import { toMessage } from '@/data/errors'
 import { AddGameDialog, type AddGameMode } from '@/components/AddGameDialog'
 import { GameActions } from '@/components/GameActions'
 import { GamesTable } from '@/components/GamesTable'
+import { TemplatesSection } from '@/components/templates/TemplatesSection'
 import { listCampaignGames, removeAllGamesFromCampaign } from '@/data/games'
 import { deleteCampaign, getCampaign, updateCampaign } from '@/data/campaigns'
 import type { GameWithCampaigns, Campaign, CampaignInput } from '@/data/types'
@@ -189,6 +190,8 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
           />
         )}
       </section>
+      <Separator />
+      <TemplatesSection campaignId={campaign.id} games={games} />
       <AddGameDialog
         open={addOpen}
         mode={addMode}

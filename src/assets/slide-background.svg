@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#f6f4fa"/>
+      <stop offset="0.55" stop-color="#ece6f6"/>
+      <stop offset="1" stop-color="#f4f1f8"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="0.4" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#f6a37a"/>
+      <stop offset="1" stop-color="#d9683f"/>
+    </radialGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <g id="b">
+      <circle r="1" fill="url(#ball)"/>
+      <g fill="none" stroke="#7a3a24" stroke-width="0.035">
+        <path d="M-1 0 H1"/>
+        <path d="M0 -1 V1"/>
+        <path d="M-0.72 -0.7 Q-0.3 0 -0.72 0.7"/>
+        <path d="M0.72 -0.7 Q0.3 0 0.72 0.7"/>
+      </g>
+    </g>
+  </defs>
+  <rect width="1080" height="1350" fill="url(#bg)"/>
+  <g filter="url(#blur)" opacity="0.22">
+    <use href="#b" transform="translate(150 640) scale(165) rotate(-18)"/>
+    <use href="#b" transform="translate(470 790) scale(150) rotate(24)"/>
+    <use href="#b" transform="translate(690 450) scale(120) rotate(8)"/>
+    <use href="#b" transform="translate(900 700) scale(170) rotate(-30)"/>
+    <use href="#b" transform="translate(720 1010) scale(185) rotate(15)"/>
+    <use href="#b" transform="translate(60 1080) scale(140) rotate(40)"/>
+  </g>
+  <rect width="1080" height="1350" fill="#ffffff" opacity="0.35"/>
+</svg>

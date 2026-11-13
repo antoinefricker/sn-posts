@@ -27,3 +27,4 @@ dist-ssr
 
 # Fichiers générés par scripts/ffbb-games-to-csv.sh
 games.csv
+.superpowers/
