@@ -1,5 +1,15 @@
 import { toBlob } from 'html-to-image'
 import { SLIDE_HEIGHT, SLIDE_WIDTH } from '@/lib/slides'
+import { waitUntil } from '@/lib/waitUntil'
+
+/** Slides mark themselves with this attribute while a stored image is still downloading. */
+export const SLIDE_LOADING_ATTR = 'data-slide-loading'
+const LOADING_TIMEOUT_MS = 10_000
+
+/** Waits for stored images to finish loading; on timeout it proceeds and exports whatever is shown. */
+async function imagesLoaded(node: HTMLElement): Promise<void> {
+  await waitUntil(() => !node.querySelector(`[${SLIDE_LOADING_ATTR}]`), LOADING_TIMEOUT_MS)
+}
 
 async function imagesDecoded(node: HTMLElement): Promise<void> {
   const images = Array.from(node.querySelectorAll('img'))
@@ -13,6 +23,7 @@ async function imagesDecoded(node: HTMLElement): Promise<void> {
  */
 export async function exportSlidePng(node: HTMLElement): Promise<Blob> {
   await document.fonts.ready
+  await imagesLoaded(node)
   await imagesDecoded(node)
   const blob = await toBlob(node, {
     pixelRatio: 1,

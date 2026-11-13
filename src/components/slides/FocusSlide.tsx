@@ -1,4 +1,5 @@
 import type { FocusConfig } from '@/data/types'
+import { SLIDE_LOADING_ATTR } from './exportSlide'
 import { SLIDE_PURPLE } from './SlideFrame'
 import { useStorageImage } from './useStorageImage'
 
@@ -10,6 +11,7 @@ export function FocusSlide({ config }: { config: FocusConfig }) {
 
   return (
     <>
+      {image.status === 'loading' && <i {...{ [SLIDE_LOADING_ATTR]: '' }} style={{ display: 'none' }} />}
       {image.status === 'ready' && image.url ? (
         <img src={image.url} alt="" style={{ ...fill, objectFit: 'cover' }} />
       ) : (

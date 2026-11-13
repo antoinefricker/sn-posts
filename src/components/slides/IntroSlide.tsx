@@ -1,5 +1,6 @@
 import defaultBackground from '@/assets/slide-background.svg'
 import type { IntroConfig } from '@/data/types'
+import { SLIDE_LOADING_ATTR } from './exportSlide'
 import { SLIDE_PURPLE } from './SlideFrame'
 import { useStorageImage } from './useStorageImage'
 
@@ -10,6 +11,7 @@ export function IntroSlide({ config }: { config: IntroConfig }) {
 
   return (
     <>
+      {image.status === 'loading' && <i {...{ [SLIDE_LOADING_ATTR]: '' }} style={{ display: 'none' }} />}
       {src && <img src={src} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(91, 31, 160, 0.35)' }} />
       <div

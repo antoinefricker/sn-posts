@@ -5,8 +5,10 @@ import { toMessage } from '@/data/errors'
 import { createTemplate, deleteTemplate, listTemplates, reorderTemplates, updateTemplate } from '@/data/templates'
 import type { CampaignTemplate, GameWithCampaigns, GamesVenue, TemplateConfig, TemplateType } from '@/data/types'
 import { groupGamesByDay } from '@/lib/gameSlides'
+import { buildSlides } from '@/lib/slides'
 import { TEMPLATE_TYPE_LABELS, deleteTemplateDescription } from '@/lib/templates'
 import { TemplateDialog } from './TemplateDialog'
+import { SlidesPreview } from './SlidesPreview'
 import { TemplateList } from './TemplateList'
 
 const TEMPLATE_TYPES: TemplateType[] = ['intro', 'focus', 'games']
@@ -50,6 +52,8 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
     return { home: count('home'), away: count('away') }
   }, [games])
 
+  const slides = useMemo(() => buildSlides(templates ?? [], games ?? []), [templates, games])
+
   function openAdd(type: TemplateType) {
     setEditing(undefined)
     setAddType(type)
@@ -70,6 +74,8 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
 
   async function handleReorder(orderedIds: string[]) {
     if (!templates) return
+    // Invalidate any in-flight load so it cannot overwrite the optimistic order.
+    requestId.current++
     const byId = new Map(templates.map((t) => [t.id, t]))
     setTemplates(orderedIds.map((id) => byId.get(id)!))
     try {
@@ -120,6 +126,7 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
           onDelete={setDeleting}
         />
       )}
+      {templates !== null && <SlidesPreview slides={slides} />}
       <TemplateDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
