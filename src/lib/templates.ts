@@ -83,3 +83,13 @@ export function templateSummary(t: CampaignTemplate, gameCountByVenue: Record<Ga
 export function deleteTemplateDescription(t: CampaignTemplate): string {
   return `Deletes this ${TEMPLATE_TYPE_LABELS[t.type]} template. The campaign's games and uploaded images are not deleted.`
 }
+
+/** Moves `activeId` to the position of `overId`; unchanged when either id is unknown. */
+export function reorderIds(ids: string[], activeId: string, overId: string): string[] {
+  const from = ids.indexOf(activeId)
+  const to = ids.indexOf(overId)
+  if (from === -1 || to === -1 || from === to) return ids
+  const next = ids.slice()
+  next.splice(to, 0, next.splice(from, 1)[0])
+  return next
+}

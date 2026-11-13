@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CampaignTemplate, FocusConfig, IntroConfig } from '@/data/types'
-import { defaultConfig, deleteTemplateDescription, templateSummary, validateConfig } from './templates'
+import { defaultConfig, deleteTemplateDescription, reorderIds, templateSummary, validateConfig } from './templates'
 
 const base = { id: 't1', campaign_id: 'c1', position: 0, created_at: '', updated_at: '' }
 
@@ -79,5 +79,22 @@ describe('deleteTemplateDescription', () => {
     const text = deleteTemplateDescription(t)
     expect(text).toContain('Games')
     expect(text).toContain("campaign's games and uploaded images are not deleted")
+  })
+})
+
+describe('reorderIds', () => {
+  const ids = ['a', 'b', 'c', 'd']
+  it('moves an item down over a later one', () => {
+    expect(reorderIds(ids, 'b', 'd')).toEqual(['a', 'c', 'd', 'b'])
+  })
+  it('moves an item up over an earlier one', () => {
+    expect(reorderIds(ids, 'd', 'a')).toEqual(['d', 'a', 'b', 'c'])
+  })
+  it('returns the same order when active equals over', () => {
+    expect(reorderIds(ids, 'b', 'b')).toEqual(ids)
+  })
+  it('returns the input unchanged for an unknown id', () => {
+    expect(reorderIds(ids, 'x', 'a')).toEqual(ids)
+    expect(reorderIds(ids, 'a', 'x')).toEqual(ids)
   })
 })

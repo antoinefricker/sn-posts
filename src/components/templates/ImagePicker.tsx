@@ -70,28 +70,30 @@ export function ImagePicker({ value, onChange, disabled }: ImagePickerProps) {
 
   return (
     <div className="grid gap-2">
-      <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Images">
-        <button
-          type="button"
-          role="radio"
-          aria-checked={value === null}
-          disabled={locked}
-          onClick={() => onChange(null)}
-          className={`flex aspect-square items-center justify-center rounded-lg border text-sm disabled:opacity-50 ${
-            value === null ? 'border-primary ring-2 ring-primary/50' : 'border-input'
-          }`}
-        >
-          None
-        </button>
-        {shown?.map((image) => (
-          <Thumbnail
-            key={image.path}
-            image={image}
-            selected={image.path === value}
+      <div className="max-h-60 overflow-y-auto p-1">
+        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Images">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={value === null}
             disabled={locked}
-            onSelect={() => onChange(image.path)}
-          />
-        ))}
+            onClick={() => onChange(null)}
+            className={`flex aspect-square items-center justify-center rounded-lg border text-sm disabled:opacity-50 ${
+              value === null ? 'border-primary ring-2 ring-primary/50' : 'border-input'
+            }`}
+          >
+            None
+          </button>
+          {shown?.map((image) => (
+            <Thumbnail
+              key={image.path}
+              image={image}
+              selected={image.path === value}
+              disabled={locked}
+              onSelect={() => onChange(image.path)}
+            />
+          ))}
+        </div>
       </div>
       {images === null && <p className="text-sm text-muted-foreground">Loading images…</p>}
       <div className="flex items-center gap-2">

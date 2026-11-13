@@ -47,7 +47,7 @@ export function TemplateDialog({ open, onOpenChange, template, type, onSubmit }:
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {resolvedType
