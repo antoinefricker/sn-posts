@@ -3,7 +3,8 @@ import type { Game, GamesVenue } from '../data/types'
 /** Rows per games slide; a day header counts as one row. */
 export const GAMES_SLIDE_ROW_CAPACITY = 8
 
-export type DayGroup = { date: string; games: Game[] }
+/** `label` overrides the plain weekday header (set when two days of a slide set share a weekday). */
+export type DayGroup = { date: string; games: Game[]; label?: string }
 
 /** A continued day appears again, with the same date, at the top of the next page. */
 export type GamesPage = { days: DayGroup[] }
@@ -42,7 +43,7 @@ export function paginateDays(days: DayGroup[], capacity: number = GAMES_SLIDE_RO
     while (rest.length > 0) {
       if (left < 2) flush()
       const take = Math.min(rest.length, left - 1)
-      current.push({ date: d.date, games: rest.slice(0, take) })
+      current.push({ ...d, games: rest.slice(0, take) })
       left -= take + 1
       rest = rest.slice(take)
     }

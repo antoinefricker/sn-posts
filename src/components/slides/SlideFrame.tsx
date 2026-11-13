@@ -3,7 +3,7 @@ import { SLIDE_HEIGHT, SLIDE_WIDTH } from '@/lib/slides'
 
 export const SLIDE_PURPLE = '#5b1fa0'
 export const SLIDE_LAVENDER = '#b3a3ef'
-export const SLIDE_FONT = "'Anton', 'Arial Narrow', sans-serif"
+const SLIDE_FONT = "'Anton', 'Arial Narrow', sans-serif"
 
 /** Fixed 1080×1350 box. `scale` shrinks it for previews; the ref points at the unscaled inner box. */
 export function SlideFrame({ children, scale = 1, ref }: { children: ReactNode; scale?: number; ref?: Ref<HTMLDivElement> }) {

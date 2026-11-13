@@ -18,6 +18,18 @@ export function formatDayLabel(date: string): string {
   return DAY_NAMES[new Date(y, m - 1, d).getDay()]
 }
 
+/** Day headers for a venue's days: the weekday, plus the day number ("SAMEDI 14") only when two days share a weekday. */
+export function dayLabels(dates: string[]): Map<string, string> {
+  const counts = new Map<string, number>()
+  for (const date of new Set(dates)) counts.set(formatDayLabel(date), (counts.get(formatDayLabel(date)) ?? 0) + 1)
+  return new Map(
+    [...new Set(dates)].map((date) => {
+      const name = formatDayLabel(date)
+      return [date, (counts.get(name) ?? 0) > 1 ? `${name} ${Number(date.split('-')[2])}` : name]
+    }),
+  )
+}
+
 /** '20:30:00' -> '20H30' */
 export function formatKickoff(time: string): string {
   const [h, m] = time.split(':')
@@ -43,7 +55,9 @@ export function buildSlides(templates: CampaignTemplate[], games: Game[]): Slide
     } else if (t.type === 'focus') {
       drafts.push({ key: t.id, kind: 'focus', type: 'focus', config: t.config })
     } else {
-      const pages = paginateDays(groupGamesByDay(games, t.config.venue))
+      const dayGroups = groupGamesByDay(games, t.config.venue)
+      const labels = dayLabels(dayGroups.map((d) => d.date))
+      const pages = paginateDays(dayGroups.map((d) => ({ ...d, label: labels.get(d.date) })))
       pages.forEach((p, i) =>
         drafts.push({ key: `${t.id}-${i + 1}`, kind: 'games', type: 'games', venue: t.config.venue, days: p.days, page: i + 1, pageCount: pages.length }),
       )

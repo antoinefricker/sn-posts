@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { downloadTemplateImage } from '@/data/templateImages'
 
-export type StorageImage = { url: string | null; status: 'idle' | 'loading' | 'ready' | 'missing' }
+type StorageImage = { url: string | null; status: 'idle' | 'loading' | 'ready' | 'missing' }
 
 type Loaded = StorageImage & { path: string }
 

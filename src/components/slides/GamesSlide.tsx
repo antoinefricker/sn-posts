@@ -3,6 +3,7 @@ import { Plane } from 'lucide-react'
 import defaultBackground from '@/assets/slide-background.svg'
 import type { Game, GamesVenue } from '@/data/types'
 import { GAMES_SLIDE_ROW_CAPACITY, matchupSides, type DayGroup } from '@/lib/gameSlides'
+import { estimateLines, fitFontSize, wordsFit } from '@/lib/nameFit'
 import { formatDayLabel, formatKickoff, SLIDE_HEIGHT, venueLabel } from '@/lib/slides'
 import { SLIDE_LAVENDER, SLIDE_PURPLE } from './SlideFrame'
 
@@ -19,21 +20,16 @@ const LETTER_SPACING = 2
 const LINE_HEIGHT = 1.05
 
 /**
- * Font size for a name in a column `width` px wide, estimated from Anton's metrics (capitals average
- * under half an em; 0.6 em covers wide words). Prefers one line at a readable size, otherwise the
- * largest size whose wrapped lines fit the row, never splitting a word.
+ * Font size for a name in a column `width` px wide. Prefers one line at a readable size, otherwise the
+ * largest size whose word-wrapped lines fit the row, never splitting a word.
  */
 function nameSize(name: string, width: number): number {
-  const longestWord = Math.max(...name.split(/\s+/).map((w) => w.length))
-  const fits = (size: number, maxLines: number) => {
-    const lines = Math.ceil((name.length * (size * 0.5 + LETTER_SPACING)) / width)
-    const wordFits = longestWord * (size * 0.6 + LETTER_SPACING) <= width
-    return wordFits && lines <= maxLines && lines * size * LINE_HEIGHT <= ROW_HEIGHT - 10
-  }
+  const singleLine = NAME_SIZES.find(
+    (s) => s >= 44 && wordsFit(name, width, s, LETTER_SPACING) && estimateLines(name, width, s, LETTER_SPACING) === 1,
+  )
   return (
-    NAME_SIZES.find((s) => s >= 44 && fits(s, 1)) ??
-    NAME_SIZES.find((s) => fits(s, 3)) ??
-    NAME_SIZES[NAME_SIZES.length - 1]
+    singleLine ??
+    fitFontSize(name, width, NAME_SIZES, { letterSpacing: LETTER_SPACING, lineHeight: LINE_HEIGHT, maxHeight: ROW_HEIGHT - 10, maxLines: 3 })
   )
 }
 
@@ -86,10 +82,10 @@ function GameRow({ game, venue }: { game: Game; venue: GamesVenue }) {
   )
 }
 
-function DayHeader({ date }: { date: string }) {
+function DayHeader({ label }: { label: string }) {
   return (
     <div style={{ height: ROW_HEIGHT, display: 'flex', alignItems: 'flex-end', gap: 16, paddingLeft: 140, paddingBottom: 18 }}>
-      <span style={{ fontSize: 72, lineHeight: 1, letterSpacing: 4 }}>{formatDayLabel(date)}</span>
+      <span style={{ fontSize: 72, lineHeight: 1, letterSpacing: 4 }}>{label}</span>
       <span style={{ flex: 1, height: 5, marginBottom: 20, background: SLIDE_PURPLE }} />
     </div>
   )
@@ -98,7 +94,7 @@ function DayHeader({ date }: { date: string }) {
 function Day({ day, venue }: { day: DayGroup; venue: GamesVenue }) {
   return (
     <>
-      <DayHeader date={day.date} />
+      <DayHeader label={day.label ?? formatDayLabel(day.date)} />
       {/* The band starts right of the plane column, as in the club's posts. */}
       <div style={{ marginLeft: 90, background: BAND }}>
         <div style={{ marginLeft: -70, paddingRight: 30 }}>

@@ -21,7 +21,7 @@ import { TEMPLATE_TYPE_LABELS, reorderIds, templateSummary } from '@/lib/templat
 
 type TemplateListProps = {
   templates: CampaignTemplate[]
-  gameCountByVenue: Record<GamesVenue, number>
+  gameCountByVenue: Record<GamesVenue, number> | null
   /** Called with the full new order after a drop. */
   onReorder: (orderedIds: string[]) => void
   onEdit: (template: CampaignTemplate) => void

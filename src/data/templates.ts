@@ -29,7 +29,7 @@ async function insertAtEnd(
     .limit(1)
     .maybeSingle<{ position: number }>()
   if (maxError) throw maxError
-  const position = (last?.position ?? -1) + 1
+  const position = (last?.position ?? 0) + 1
   const { data, error } = await supabase
     .from('campaign_templates')
     .insert({ campaign_id: campaignId, type, config, position })

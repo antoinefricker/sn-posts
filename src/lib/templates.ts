@@ -64,15 +64,16 @@ export function validateConfig(type: TemplateType, config: TemplateConfig): stri
 }
 
 /** One-line description of a template for the campaign's template list. */
-export function templateSummary(t: CampaignTemplate, gameCountByVenue: Record<GamesVenue, number>): string {
+export function templateSummary(t: CampaignTemplate, gameCountByVenue: Record<GamesVenue, number> | null): string {
   switch (t.type) {
     case 'intro':
       return t.config.title
     case 'focus':
       return `${t.config.badge} · ${t.config.title}`
     case 'games': {
-      const count = gameCountByVenue[t.config.venue]
       const venue = t.config.venue === 'home' ? 'Home' : 'Away'
+      if (!gameCountByVenue) return `${venue} · Loading games…`
+      const count = gameCountByVenue[t.config.venue]
       const games = count === 0 ? 'No games' : count === 1 ? '1 game' : `${count} games`
       return `${venue} · ${games}`
     }

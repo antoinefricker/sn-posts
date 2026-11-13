@@ -12,12 +12,12 @@ const DOWNLOAD_GAP_MS = 400
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 /** Scaled thumbnails of every slide with per-slide and "Download all" PNG export (1080×1350). */
-export function SlidesPreview({ slides }: { slides: Slide[] }) {
+export function SlidesPreview({ slides, notice }: { slides: Slide[]; /** When set, exports are disabled and this explains why. */ notice?: string }) {
   const nodes = useRef(new Map<string, HTMLDivElement>())
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [busyKey, setBusyKey] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const busy = progress !== null || busyKey !== null
+  const busy = progress !== null || busyKey !== null || notice !== undefined
 
   /** Returns whether the slide was exported; records the failure against the slide otherwise. */
   async function exportOne(slide: Slide): Promise<boolean> {
@@ -62,6 +62,7 @@ export function SlidesPreview({ slides }: { slides: Slide[] }) {
           Slides
         </h2>
         <div className="flex items-center gap-3">
+          {notice && <span className="text-sm text-muted-foreground">{notice}</span>}
           {progress && (
             <span role="status" className="text-sm text-muted-foreground">
               Exporting {progress.done + 1} of {progress.total}…

@@ -1,7 +1,7 @@
 import { supabase } from '@/supabase'
 import { validateImageFile } from '@/lib/templateImages'
 
-export { validateImageFile, MAX_IMAGE_BYTES } from '@/lib/templateImages'
+export { validateImageFile } from '@/lib/templateImages'
 
 const BUCKET = 'template-images'
 

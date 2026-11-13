@@ -17,7 +17,7 @@ export function FocusSlide({ config }: { config: FocusConfig }) {
       ) : (
         <div style={{ ...fill, background: '#9ca3af', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {image.status !== 'loading' && (
-            <span style={{ fontFamily: 'system-ui, sans-serif', fontSize: 44, color: '#f3f4f6' }}>Image unavailable</span>
+            <span style={{ fontFamily: 'system-ui, sans-serif', fontSize: 44, color: '#f3f4f6' }}>IMAGE INDISPONIBLE</span>
           )}
         </div>
       )}

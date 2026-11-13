@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CampaignTemplate, Game } from '../data/types'
-import { buildSlides, formatDayLabel, formatKickoff, venueLabel } from './slides'
+import { buildSlides, dayLabels, formatDayLabel, formatKickoff, venueLabel } from './slides'
 
 const base = { campaign_id: 'c1', created_at: '', updated_at: '' }
 
@@ -21,6 +21,18 @@ describe('formatDayLabel', () => {
   })
 })
 
+describe('dayLabels', () => {
+  it('keeps the plain weekday when weekdays differ', () => {
+    expect([...dayLabels(['2026-11-14', '2026-11-15']).values()]).toEqual(['SAMEDI', 'DIMANCHE'])
+  })
+  it('adds the day number when two days share a weekday', () => {
+    const labels = dayLabels(['2026-11-14', '2026-11-15', '2026-11-21'])
+    expect(labels.get('2026-11-14')).toBe('SAMEDI 14')
+    expect(labels.get('2026-11-21')).toBe('SAMEDI 21')
+    expect(labels.get('2026-11-15')).toBe('DIMANCHE')
+  })
+})
+
 describe('formatKickoff', () => {
   it('formats HH:MM:SS as HHhMM', () => {
     expect(formatKickoff('20:30:00')).toBe('20H30')
@@ -32,6 +44,14 @@ describe('venueLabel', () => {
   it('returns French labels', () => {
     expect(venueLabel('home')).toBe('DOMICILE')
     expect(venueLabel('away')).toBe('EXTÉRIEUR')
+  })
+})
+
+describe('buildSlides day labels', () => {
+  it('numbers repeated weekdays within one venue only', () => {
+    const slides = buildSlides([homeT], [game('a', '2026-11-14', true), game('b', '2026-11-21', true), game('c', '2026-11-22', false)])
+    const labels = slides.flatMap((s) => (s.kind === 'games' ? s.days.map((d) => d.label) : []))
+    expect(labels).toEqual(['SAMEDI 14', 'SAMEDI 21'])
   })
 })
 

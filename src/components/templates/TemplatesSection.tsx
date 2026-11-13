@@ -11,6 +11,13 @@ import { TemplateDialog } from './TemplateDialog'
 import { SlidesPreview } from './SlidesPreview'
 import { TemplateList } from './TemplateList'
 
+const REORDER_CONFLICT = '22023'
+
+function reorderErrorMessage(e: unknown): string {
+  const code = typeof e === 'object' && e !== null && 'code' in e ? (e as { code?: string }).code : undefined
+  return code === REORDER_CONFLICT ? 'Templates changed elsewhere; the list was refreshed.' : toMessage(e)
+}
+
 const TEMPLATE_TYPES: TemplateType[] = ['intro', 'focus', 'games']
 
 type TemplatesSectionProps = {
@@ -27,6 +34,11 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
   const [editing, setEditing] = useState<CampaignTemplate | undefined>()
   const [addType, setAddType] = useState<TemplateType>('intro')
   const [deleting, setDeleting] = useState<CampaignTemplate | null>(null)
+  // Kept after closing so the delete dialog keeps its text during its close animation.
+  const [lastDeleted, setLastDeleted] = useState<CampaignTemplate | null>(null)
+  // Reorders run one at a time so they reach the database in the order they were made.
+  const reorderQueue = useRef<Promise<void>>(Promise.resolve())
+  const pendingReorders = useRef(0)
   // Only the latest request may write state, so a slow older response cannot overwrite a newer one.
   const requestId = useRef(0)
 
@@ -47,8 +59,9 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
   }, [load])
 
   const gameCountByVenue = useMemo(() => {
+    if (games === null) return null
     const count = (venue: GamesVenue) =>
-      groupGamesByDay(games ?? [], venue).reduce((sum, day) => sum + day.games.length, 0)
+      groupGamesByDay(games, venue).reduce((sum, day) => sum + day.games.length, 0)
     return { home: count('home'), away: count('away') }
   }, [games])
 
@@ -78,14 +91,22 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
     requestId.current++
     const byId = new Map(templates.map((t) => [t.id, t]))
     setTemplates(orderedIds.map((id) => byId.get(id)!))
-    try {
-      await reorderTemplates(campaignId, orderedIds)
-    } catch (e) {
-      setError(toMessage(e))
-      await load()
+    pendingReorders.current++
+    const run = reorderQueue.current.then(async () => {
+      let failure: string | null = null
+      try {
+        await reorderTemplates(campaignId, orderedIds)
+      } catch (e) {
+        failure = reorderErrorMessage(e)
+      }
+      pendingReorders.current--
+      // Refresh once, after the last queued reorder settles; an earlier failure still reports below.
+      if (failure !== null || pendingReorders.current === 0) await load()
       // load() clears the error on success; show why the order was reverted.
-      setError(toMessage(e))
-    }
+      if (failure !== null) setError(failure)
+    })
+    reorderQueue.current = run
+    await run
   }
 
   return (
@@ -123,10 +144,13 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
           gameCountByVenue={gameCountByVenue}
           onReorder={(ids) => void handleReorder(ids)}
           onEdit={openEdit}
-          onDelete={setDeleting}
+          onDelete={(t) => {
+            setLastDeleted(t)
+            setDeleting(t)
+          }}
         />
       )}
-      {templates !== null && <SlidesPreview slides={slides} />}
+      {templates !== null && <SlidesPreview slides={slides} notice={games === null ? 'Loading games…' : undefined} />}
       <TemplateDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -139,8 +163,8 @@ export function TemplatesSection({ campaignId, games }: TemplatesSectionProps) {
         onOpenChange={(open) => {
           if (!open) setDeleting(null)
         }}
-        title={deleting ? `Delete this ${TEMPLATE_TYPE_LABELS[deleting.type]} template?` : 'Delete template?'}
-        description={deleting ? deleteTemplateDescription(deleting) : ''}
+        title={lastDeleted ? `Delete this ${TEMPLATE_TYPE_LABELS[lastDeleted.type]} template?` : 'Delete template?'}
+        description={lastDeleted ? deleteTemplateDescription(lastDeleted) : ''}
         confirmLabel="Delete template"
         onConfirm={async () => {
           if (!deleting) return

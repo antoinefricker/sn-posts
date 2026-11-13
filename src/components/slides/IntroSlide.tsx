@@ -1,5 +1,6 @@
 import defaultBackground from '@/assets/slide-background.svg'
 import type { IntroConfig } from '@/data/types'
+import { INTRO_GAP, INTRO_PADDING, INTRO_TITLE_LINE_HEIGHT, introTitleSize } from '@/lib/introFit'
 import { SLIDE_LOADING_ATTR } from './exportSlide'
 import { SLIDE_PURPLE } from './SlideFrame'
 import { useStorageImage } from './useStorageImage'
@@ -18,12 +19,12 @@ export function IntroSlide({ config }: { config: IntroConfig }) {
         style={{
           position: 'absolute',
           inset: 0,
-          padding: 90,
+          padding: INTRO_PADDING,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 40,
+          gap: INTRO_GAP,
           textAlign: 'center',
           color: '#fff',
           overflowWrap: 'anywhere',
@@ -32,8 +33,8 @@ export function IntroSlide({ config }: { config: IntroConfig }) {
         <h1
           style={{
             margin: 0,
-            fontSize: 150,
-            lineHeight: 1.05,
+            fontSize: introTitleSize(config.title, config.subtitle),
+            lineHeight: INTRO_TITLE_LINE_HEIGHT,
             textTransform: 'uppercase',
             WebkitTextStroke: `10px ${SLIDE_PURPLE}`,
             paintOrder: 'stroke fill',
